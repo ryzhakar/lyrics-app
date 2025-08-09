@@ -92,8 +92,8 @@ def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901, PLR0912
             current_is_implicit = False
             continue
         stripped = line.strip()
-        if ('{' in stripped or '}' in stripped) and not (start_match or end_match):
-            raise ParseError('Invalid section syntax')
+        if stripped.startswith('{') and stripped.endswith('}') and not (start_match or end_match):
+            continue
         no_chords = CHORD_PATTERN.sub('', line)
         if '[' in no_chords or ']' in no_chords:
             raise ParseError('Invalid chord syntax')
