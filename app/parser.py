@@ -61,10 +61,11 @@ def tokenize_line(line: str) -> tuple[list[str | None], list[int], str]:
     return chords, positions, lyrics
 
 
-def parse_chordpro(content: str) -> ParsedSong:
+def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901
     """Parse ChordPro content into a structured song."""
     sections: list[Section] = []
     current_section: Section | None = None
+    current_is_implicit = False
     warnings: list[str] = []
     for raw_line in content.splitlines():
         line = raw_line.rstrip('\n')
@@ -75,24 +76,32 @@ def parse_chordpro(content: str) -> ParsedSong:
         start_match = SECTION_START_PATTERN.fullmatch(line.strip())
         end_match = SECTION_END_PATTERN.fullmatch(line.strip())
         if start_match:
-            if current_section is not None:
+            if current_section is not None and not current_is_implicit:
                 raise ParseError('Nested sections are not supported')
+            if current_section is not None and current_is_implicit:
+                sections.append(current_section)
             section_name = start_match.group(1).strip()
             current_section = Section(section_name, [])
+            current_is_implicit = False
             continue
         if end_match:
-            if current_section is None:
+            if current_section is None or current_is_implicit:
                 raise ParseError('Unmatched section end')
             sections.append(current_section)
             current_section = None
+            current_is_implicit = False
             continue
         chords, positions, lyrics = tokenize_line(line)
         line_block = LineBlock(chords, positions, lyrics)
         if current_section is None:
             current_section = Section('section', [])
+            current_is_implicit = True
         current_section.lines.append(line_block)
     if current_section is not None:
-        raise ParseError('Unclosed section detected')
+        if current_is_implicit:
+            sections.append(current_section)
+        else:
+            raise ParseError('Unclosed section detected')
     return ParsedSong(sections, warnings)
 
 
