@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import ClassVar
 from uuid import UUID  # noqa: TC003
 
 from sqlalchemy.orm import registry
@@ -15,16 +16,17 @@ class SongModel:
     """Represent a song for admin views."""
 
     __table__ = songs_table
+    __allow_unmapped__ = True
 
-    id: UUID
-    original_title: str | None
-    translated_title: str
-    artist: str | None
-    chordpro_content: str
-    default_key: str | None
-    youtube_url: str | None
-    songlink_url: str | None
-    is_draft: bool
+    id: ClassVar[UUID]
+    original_title: ClassVar[str | None]
+    translated_title: ClassVar[str]
+    artist: ClassVar[str | None]
+    chordpro_content: ClassVar[str]
+    default_key: ClassVar[str | None]
+    youtube_url: ClassVar[str | None]
+    songlink_url: ClassVar[str | None]
+    is_draft: ClassVar[bool]
 
 
 @mapper_registry.mapped
@@ -32,7 +34,8 @@ class AdminUserModel:
     """Represent an admin user for admin views."""
 
     __table__ = admin_users_table
+    __allow_unmapped__ = True
 
-    id: UUID
-    email: str
-    password_hash: str
+    id: ClassVar[UUID]
+    email: ClassVar[str]
+    password_hash: ClassVar[str]

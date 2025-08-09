@@ -22,7 +22,7 @@ repos:
     name: run tests
     entry: pytest
     language: system
-    args: [--cov-report, --cov=app, -x, tests/]
+    args: [--cov=app, -x, tests/]
     pass_filenames: false
     always_run: true
     stages: [pre-push, post-merge, post-rewrite]

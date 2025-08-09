@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Annotated
 
 import bcrypt
@@ -21,7 +22,34 @@ from .transposer import compute_semitone_interval, transpose_chord_symbol
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.ext.asyncio import AsyncConnection
 
-app = FastAPI(debug=settings.debug)
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    if settings.admin_bootstrap_email and (
+        settings.admin_bootstrap_password or settings.admin_bootstrap_password_hash
+    ):
+        async for conn in get_connection():
+            existing = await get_admin_by_email(conn, settings.admin_bootstrap_email)
+            if not existing:
+                if settings.admin_bootstrap_password_hash:
+                    pw_hash = settings.admin_bootstrap_password_hash.encode()
+                else:
+                    if settings.admin_bootstrap_password is None:
+                        raise HTTPException(status_code=500, detail='Missing bootstrap password')
+                    pw_hash = bcrypt.hashpw(
+                        settings.admin_bootstrap_password.encode(),
+                        bcrypt.gensalt(),
+                    )
+                await create_admin(
+                    conn,
+                    settings.admin_bootstrap_email,
+                    pw_hash.decode() if isinstance(pw_hash, bytes) else pw_hash,
+                )
+            break
+    yield
+
+
+app = FastAPI(debug=settings.debug, lifespan=lifespan)
 templates = Jinja2Templates(directory='app/templates')
 app.mount('/static', StaticFiles(directory='static'), name='static')
 setup_admin(app)
@@ -44,31 +72,7 @@ def parse_setlist_param(raw: str | None) -> list[tuple[uuid.UUID, str | None]]:
     return items
 
 
-@app.on_event('startup')
-async def on_startup() -> None:
-    """Bootstrap admin if configured."""
-    if settings.admin_bootstrap_email and (
-        settings.admin_bootstrap_password or settings.admin_bootstrap_password_hash
-    ):
-        async for conn in get_connection():
-            existing = await get_admin_by_email(conn, settings.admin_bootstrap_email)
-            if existing:
-                break
-            if settings.admin_bootstrap_password_hash:
-                pw_hash = settings.admin_bootstrap_password_hash.encode()
-            else:
-                if settings.admin_bootstrap_password is None:
-                    raise HTTPException(status_code=500, detail='Missing bootstrap password')
-                pw_hash = bcrypt.hashpw(
-                    settings.admin_bootstrap_password.encode(),
-                    bcrypt.gensalt(),
-                )
-            await create_admin(
-                conn,
-                settings.admin_bootstrap_email,
-                pw_hash.decode() if isinstance(pw_hash, bytes) else pw_hash,
-            )
-            break
+## removed deprecated startup event in favor of lifespan
 
 
 @app.get('/health')
@@ -80,11 +84,11 @@ async def health() -> JSONResponse:
 @app.get('/', response_class=HTMLResponse)
 async def render_setlist(
     request: Request,
-    conn: Annotated[AsyncConnection, Depends(get_connection)],
     s: Annotated[str | None, Query()] = None,
     dark: Annotated[int | None, Query()] = None,
     chords: Annotated[int | None, Query()] = 1,
     font: Annotated[str | None, Query()] = None,
+    conn: Annotated[AsyncConnection, Depends(get_connection)] = Depends(get_connection),  # noqa: FAST002
 ) -> HTMLResponse:
     """Render one or many songs in a setlist."""
     pairs = parse_setlist_param(s)
@@ -124,8 +128,8 @@ async def render_setlist(
 @app.get('/search', response_class=HTMLResponse)
 async def search(
     request: Request,
-    conn: Annotated[AsyncConnection, Depends(get_connection)],
     q: Annotated[str, Query()] = '',
+    conn: Annotated[AsyncConnection, Depends(get_connection)] = Depends(get_connection),  # noqa: FAST002
 ) -> HTMLResponse:
     """Search and list songs."""
     results = await search_songs(conn, q) if q else []
