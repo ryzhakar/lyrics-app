@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     database_url: str = 'postgresql+asyncpg://postgres:postgres@localhost:5432/lyrics_app'
     secret_key: str = 'dev-secret'  # noqa: S105
     debug: bool = False
+    allowed_hosts: list[str] = ['*']
+    cors_allow_origins: list[str] = []
+    force_https: bool = False
+    gzip_min_length: int = 512
 
     admin_bootstrap_email: str | None = None
     admin_bootstrap_password: str | None = None

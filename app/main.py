@@ -8,16 +8,26 @@ import bcrypt
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.templating import Jinja2Templates
 
 from .admin import setup_admin
 from .db import get_connection
+from .middleware import SecurityHeadersMiddleware
 from .parser import parse_chordpro
 from .renderer import render_parsed_song
 from .repositories.admin_users import create_admin, get_admin_by_email
 from .repositories.songs import get_song_by_id, list_recent_songs, search_songs
 from .settings import settings
-from .transposer import compute_semitone_interval, transpose_chord_symbol
+from .transposer import (
+    compute_semitone_interval,
+    prefer_sharps_for_key,
+    transpose_chord_symbol,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.ext.asyncio import AsyncConnection
@@ -53,6 +63,24 @@ app = FastAPI(debug=settings.debug, lifespan=lifespan)
 templates = Jinja2Templates(directory='app/templates')
 app.mount('/static', StaticFiles(directory='static'), name='static')
 setup_admin(app)
+
+# middleware
+app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
+if settings.gzip_min_length > 0:
+    app.add_middleware(GZipMiddleware, minimum_size=settings.gzip_min_length)
+if settings.allowed_hosts:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts)
+if settings.cors_allow_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_allow_origins,
+        allow_credentials=True,
+        allow_methods=['*'],
+        allow_headers=['*'],
+    )
+if settings.force_https:
+    app.add_middleware(HTTPSRedirectMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 def parse_setlist_param(raw: str | None) -> list[tuple[uuid.UUID, str | None]]:
@@ -109,9 +137,13 @@ async def render_setlist(
         except Exception as exc:
             raise HTTPException(status_code=400, detail='Song content cannot be parsed') from exc
         semitones = compute_semitone_interval(row.get('default_key'), target_key)
+        prefer_sharps = prefer_sharps_for_key(target_key)
         for section in parsed.sections:
             for _idx, ch in enumerate(section.lines):
-                ch.chords = [transpose_chord_symbol(c, semitones) if c else None for c in ch.chords]
+                ch.chords = [
+                    transpose_chord_symbol(c, semitones, prefer_sharps) if c else None
+                    for c in ch.chords
+                ]
         html = render_parsed_song(parsed, show_chords=bool(chords))
         title = str(row.get('translated_title'))
         artist = f' - {row["artist"]}' if row.get('artist') else ''
