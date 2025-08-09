@@ -1,0 +1,25 @@
+from __future__ import annotations
+
+import pytest
+
+from app.parser import ParseError, parse_chordpro, strip_chordpro_to_lyrics
+
+
+def test_strip_chordpro_to_lyrics_removes_markers_and_brackets() -> None:
+    content = '{start_of_section: Verse}\n[C]Amazing {end_of_section}'
+    text = strip_chordpro_to_lyrics(content)
+    assert 'Amazing' in text
+    assert '[' not in text and 'start_of_section' not in text and 'end_of_section' not in text
+
+
+def test_nested_section_raises() -> None:
+    content = (
+        '{start_of_section: A}\n[C]Line\n{start_of_section: B}\n{end_of_section}\n{end_of_section}'
+    )
+    with pytest.raises(ParseError):
+        parse_chordpro(content)
+
+
+def test_unmatched_end_raises() -> None:
+    with pytest.raises(ParseError):
+        parse_chordpro('{end_of_section}')
