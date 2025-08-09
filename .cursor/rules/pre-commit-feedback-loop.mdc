@@ -1,0 +1,16 @@
+---
+description:
+globs: *.py
+alwaysApply: false
+---
+When it comes to code, the user already has a set of helpful automations the boost the value of your output.
+Those rules are described in [.pre-commit-config.yaml](mdc:.pre-commit-config.yaml).
+You don't need to execute them manually, but rather to launch the hooks.
+This is done with the `pre-commit run` command. Note that it will only ever consider staged changes. That behavior is required by user.
+After running the command, the hooks will change the source code, but won't stage it. You'll need to re-stage them again for the hooks to actually see the changes.
+There will be a number of manual lints the will require your undivided attention.
+After applying all the fixes, you'll need to stage them and re-run the hooks.
+Apply the fixes in bulk, to use the tool calling efficiently.
+
+Run this feedback loop until every check passes.
+YOU MUST FIX EVERYTHING. YOU'RE NOT ALLOWED TO IGNORE ANY ERRORS.
