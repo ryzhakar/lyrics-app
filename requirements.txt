@@ -35,6 +35,10 @@ markupsafe==3.0.2
     #   jinja2
     #   mako
     #   wtforms
+psycopg==3.2.9
+    # via lyrics-app (pyproject.toml)
+psycopg-binary==3.2.9
+    # via psycopg
 pychord==1.2.2
     # via lyrics-app (pyproject.toml)
 pydantic==2.11.7
@@ -68,6 +72,7 @@ typing-extensions==4.14.1
     #   alembic
     #   anyio
     #   fastapi
+    #   psycopg
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
