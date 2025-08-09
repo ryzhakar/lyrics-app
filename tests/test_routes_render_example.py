@@ -9,11 +9,8 @@ from app.db import songs
 
 
 @pytest.mark.asyncio
-async def test_route_renders_example_file(client, tmp_path):  # type: ignore[no-untyped-def]
-    content = (
-        tmp_path / 'example.chordpro'
-    )  # not used directly; keep var to mirror structure if needed
-    # Insert a song row with example content
+async def test_route_renders_example_file(client):  # type: ignore[no-untyped-def]
+    # Insert a song row with example content inline to avoid external file dependency
     from sqlalchemy.ext.asyncio import AsyncConnection
     from app.db import engine
 
