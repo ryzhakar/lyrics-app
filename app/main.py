@@ -4,7 +4,6 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Annotated
 
-import bcrypt
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +19,6 @@ from .db import get_connection
 from .middleware import SecurityHeadersMiddleware
 from .parser import parse_chordpro
 from .renderer import render_parsed_song
-from .repositories.admin_users import create_admin, get_admin_by_email
 from .repositories.songs import get_song_by_id, list_recent_songs, search_songs
 from .settings import settings
 from .transposer import (
@@ -35,27 +33,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    if settings.admin_bootstrap_email and (
-        settings.admin_bootstrap_password or settings.admin_bootstrap_password_hash
-    ):
-        async for conn in get_connection():
-            existing = await get_admin_by_email(conn, settings.admin_bootstrap_email)
-            if not existing:
-                if settings.admin_bootstrap_password_hash:
-                    pw_hash = settings.admin_bootstrap_password_hash.encode()
-                else:
-                    if settings.admin_bootstrap_password is None:
-                        raise HTTPException(status_code=500, detail='Missing bootstrap password')
-                    pw_hash = bcrypt.hashpw(
-                        settings.admin_bootstrap_password.encode(),
-                        bcrypt.gensalt(),
-                    )
-                await create_admin(
-                    conn,
-                    settings.admin_bootstrap_email,
-                    pw_hash.decode() if isinstance(pw_hash, bytes) else pw_hash,
-                )
-            break
     yield
 
 

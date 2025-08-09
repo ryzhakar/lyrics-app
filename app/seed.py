@@ -12,41 +12,20 @@ from .db import get_connection
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.ext.asyncio import AsyncConnection
 from .repositories.admin_users import create_admin, get_admin_by_email
-from .repositories.songs import create_song
 from .settings import settings
 
 
 async def seed() -> None:
     """Insert sample songs for development."""
     async for conn in get_connection():
-        await _seed_songs(conn)
         await _seed_admin(conn)
         _ensure_env()
         break
 
 
 async def _seed_songs(conn: AsyncConnection) -> None:
-    """Insert sample songs if none exist."""
-    song1 = {
-        'translated_title': 'Amazing Grace',
-        'artist': 'John Newton',
-        'chordpro_content': '[C]Amazing gr[G]ace how [Am]sweet the [F]sound',
-        'default_key': 'C',
-        'is_draft': False,
-    }
-    song2 = {
-        'translated_title': 'How Great Thou Art',
-        'artist': 'Carl Boberg',
-        'chordpro_content': (
-            '{start_of_section: Verse}\n'
-            '[C]O Lord my [F]God, when [C]I in [G]awesome wonder\n'
-            '{end_of_section}'
-        ),
-        'default_key': 'C',
-        'is_draft': False,
-    }
-    await create_song(conn, song1)
-    await create_song(conn, song2)
+    """Reserved for future song bootstrap; currently no-op."""
+    _ = conn
 
 
 async def _seed_admin(conn: AsyncConnection) -> None:
@@ -58,6 +37,7 @@ async def _seed_admin(conn: AsyncConnection) -> None:
     password = secrets.token_urlsafe(16)
     pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     await create_admin(conn, email, pw_hash)
+    await conn.commit()
     _write_env_vars(
         {
             'ADMIN_BOOTSTRAP_EMAIL': email,

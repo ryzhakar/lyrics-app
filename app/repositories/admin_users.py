@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine import Result
@@ -26,3 +26,11 @@ async def get_admin_by_email(conn: AsyncConnection, email: str) -> dict[str, Any
     res: Result = await conn.execute(stmt)
     row = res.mappings().first()
     return dict(row) if row else None
+
+
+async def update_admin_password(conn: AsyncConnection, email: str, password_hash: str) -> None:
+    """Update admin password hash by email."""
+    stmt = (
+        update(admin_users).where(admin_users.c.email == email).values(password_hash=password_hash)
+    )
+    await conn.execute(stmt)

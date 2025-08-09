@@ -15,11 +15,12 @@ docker compose up -d db
 alembic upgrade head
 ```
 
-3. Seed sample data (optional)
+3. Seed sample data and bootstrap admin (optional)
 
 ```
-python -m app.seed
+uv run python -m app.seed
 ```
+This will create `.env` with `SECRET_KEY`, `DATABASE_URL` and admin bootstrap credentials if missing.
 
 4. Run the app
 

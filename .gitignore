@@ -1,3 +1,5 @@
+.env
+*.chordpro
 .DS_Store
 # Python-generated files
 __pycache__/
