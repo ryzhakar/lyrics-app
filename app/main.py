@@ -95,8 +95,9 @@ async def render_setlist(
     if not pairs:
         recent = await list_recent_songs(conn, limit=10)
         return templates.TemplateResponse(
+            request,
             'search.html',
-            {'request': request, 'results': recent, 'selected': [], 'query': ''},
+            {'results': recent, 'selected': [], 'query': ''},
         )
     blocks: list[str] = []
     for song_id, target_key in pairs:
@@ -115,9 +116,9 @@ async def render_setlist(
         article = f'<article class="song">{header}{html}</article>'
         blocks.append(article)
     return templates.TemplateResponse(
+        request,
         'song.html',
         {
-            'request': request,
             'content': '<hr class="song-separator">'.join(blocks),
             'dark': bool(dark),
             'font': font or 'normal',
@@ -134,6 +135,7 @@ async def search(
     """Search and list songs."""
     results = await search_songs(conn, q) if q else []
     return templates.TemplateResponse(
+        request,
         'search.html',
-        {'request': request, 'results': results, 'selected': [], 'query': q},
+        {'results': results, 'selected': [], 'query': q},
     )

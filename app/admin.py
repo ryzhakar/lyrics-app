@@ -1,22 +1,33 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:  # pragma: no cover
     from fastapi import Request
 from sqladmin import Admin, ModelView
+from sqlalchemy import create_engine
 
-from .db import engine
 from .models import AdminUserModel, SongModel
 from .parser import parse_chordpro
+from .settings import settings
 
 
-class SongAdmin(ModelView):
+class SongAdmin(ModelView, model=SongModel):
     """Configure admin for songs."""
 
     category = 'Content'
     icon = 'fa-solid fa-music'
-    model = SongModel
+    column_list: ClassVar[list[str]] = ['id', 'translated_title', 'artist', 'is_draft']
+    form_columns: ClassVar[list[str]] = [
+        'translated_title',
+        'original_title',
+        'artist',
+        'chordpro_content',
+        'default_key',
+        'youtube_url',
+        'songlink_url',
+        'is_draft',
+    ]
 
     async def on_model_change(
         self,
@@ -31,17 +42,28 @@ class SongAdmin(ModelView):
         parse_chordpro(content)
 
 
-class AdminUserAdmin(ModelView):
+class AdminUserAdmin(ModelView, model=AdminUserModel):
     """Configure admin for users."""
 
     category = 'Users'
     icon = 'fa-solid fa-user'
-    model = AdminUserModel
+    column_list: ClassVar[list[str]] = ['id', 'email']
+    form_columns: ClassVar[list[str]] = ['email', 'password_hash']
+
+
+def _sync_db_url(url: str) -> str:
+    """Normalize async pg URL to psycopg sync driver."""
+    if '+asyncpg' in url:
+        return url.replace('+asyncpg', '+psycopg')
+    if url.startswith('postgresql://'):
+        return url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    return url
 
 
 def setup_admin(app: Any) -> Admin:
     """Set up SQLAdmin with views."""
-    admin = Admin(app=app, engine=engine.sync_engine)
+    sync_engine = create_engine(_sync_db_url(settings.database_url), pool_pre_ping=True)
+    admin = Admin(app=app, engine=sync_engine)
     admin.add_view(SongAdmin)
     admin.add_view(AdminUserAdmin)
     return admin
