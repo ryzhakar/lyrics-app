@@ -1,6 +1,6 @@
-def main():
-    print("Hello from lyrics-app!")
+def main() -> None:
+    """Run hello."""
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

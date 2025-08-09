@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  <form action="/search" method="get">
+    <input type="search" name="q" placeholder="Search..." value="{{ query }}" />
+    <button type="submit">Search</button>
+  </form>
+  <ul>
+    {% for s in results %}
+      <li>
+        <a href="/?s={{ s.id }}:{{ s.default_key or '' }}">{{ s.translated_title }}{% if s.artist %} — {{ s.artist }}{% endif %}</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

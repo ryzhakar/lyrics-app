@@ -1,0 +1,41 @@
+:root {
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+body.dark {
+  background: #0f1214;
+  color: #e6e6e6;
+}
+
+.song-container {
+  scroll-snap-type: y proximity;
+}
+
+.song-section {
+  scroll-snap-align: start;
+  scroll-margin-top: 2rem;
+}
+
+.section-header {
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 10;
+}
+
+pre.chords, pre.lyrics {
+  font-family: var(--mono);
+  margin: 0;
+  white-space: pre;
+}
+
+.song-separator {
+  margin: 2rem 0;
+}
+
+.font-large { font-size: 1.25rem; }
+.font-normal { font-size: 1rem; }
+
+@media print {
+  form, nav, header, footer { display: none !important; }
+}

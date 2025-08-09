@@ -11,6 +11,9 @@ dependencies = [
     "fastapi>=0.116.1",
     "jinja2>=3.1.6",
     "pydantic>=2.11.7",
+    "pydantic-settings>=2.10.1",
+    "pychord>=1.1.2,<1.3.0",
+    "bcrypt>=4.2.1",
     "sqladmin[full]>=0.21.0",
     "sqlalchemy[asyncio]>=2.0.42",
     "uvicorn>=0.35.0",
@@ -22,4 +25,76 @@ dev = [
     "mypy>=1.17.1",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.2",
+    "sqlalchemy[mypy]>=2.0.0",
+]
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+warn_unused_configs = true
+ignore_missing_imports = true
+no_implicit_optional = false
+exclude = ["^tests/"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # too long to fix right now
+    "D1",        # docstrings
+    "ANN",       # flake8-annotations
+    "TD003",     # Missing issue link on the line following this TODO
+
+    # not gonna fix
+    ## niche extensions
+    "EM",        # Enforcing more pristine expection raises, looks to much
+    "FIX",       # Line contains TODO, consider resolving the issue
+    "FBT",       # flake8-boolean-trap
+
+    ## deemed better to avoid such rules
+    "TRY003",    # Proposes to create custom exception class instead of raising with text
+    "G004",      # Logging statement uses f-string - but may be worth it
+    "RET504",    # Unnecessary assignment to before return statement, improves readability
+    "PLR0913",   # Too many arguments in function definition (> 5)
+    "N818",      # Exception name `` should be named with an Error suffix, prone to false positives
+
+    ## conflicts with a twin
+    "D203",      # 1 blank line required before class docstring, conflicts with D211
+    "D212",      # Multi-line docstring summary should start at the first line, conflicts with D213
+]
+exclude = [
+    "tests/**",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "double"
+docstring-quotes = "double"
+
+[tool.ruff.lint.flake8-bugbear]
+# Allow fastapi default arguments like, e.g., `data: List[str] = Query(None)`.
+extend-immutable-calls = [
+    "fastapi.Path",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Body",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Depends",
+    "fastapi.Security",
 ]
