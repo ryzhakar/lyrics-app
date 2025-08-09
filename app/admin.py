@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
+import bcrypt
+
 if TYPE_CHECKING:  # pragma: no cover
     from fastapi import Request
 from sqladmin import Admin, ModelView
 from sqlalchemy import create_engine
+from wtforms import PasswordField
 
 from .auth import AdminAuth
 from .models import AdminUserModel, SongModel
@@ -62,7 +65,28 @@ class AdminUserAdmin(ModelView, model=AdminUserModel):
     category = 'Users'
     icon = 'fa-solid fa-user'
     column_list: ClassVar[list[str]] = ['id', 'email']
-    form_columns: ClassVar[list[str]] = ['email', 'password_hash']
+    form_columns: ClassVar[list[str]] = ['email', 'password']
+    form_extra_fields: ClassVar[dict[str, Any]] = {'password': PasswordField('Password')}
+    can_create: ClassVar[bool] = True
+    can_edit: ClassVar[bool] = True
+    can_delete: ClassVar[bool] = True
+
+    async def on_model_change(
+        self,
+        data: dict[str, Any],
+        model: AdminUserModel,  # noqa: ARG002
+        is_created: bool,
+        request: Request,
+    ) -> None:
+        """Hash password field on create/update and never persist raw value."""
+        _ = (request,)
+        raw_pw = data.get('password') if 'password' in data else None
+        if is_created and not raw_pw:
+            raise ValueError('password is required')
+        if raw_pw:
+            hashed = bcrypt.hashpw(str(raw_pw).encode(), bcrypt.gensalt()).decode()
+            data['password_hash'] = hashed
+        data.pop('password', None)
 
 
 def _sync_db_url(url: str) -> str:
