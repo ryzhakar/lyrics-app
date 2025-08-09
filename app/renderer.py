@@ -11,12 +11,20 @@ def build_chord_line(line: LineBlock, show_chords: bool) -> str:
     """Build a chord line preserving positions."""
     if not show_chords:
         return ''
-    chars: list[str] = []
+    max_len = 0
+    tokens: list[tuple[int, str]] = []
     for idx, ch in enumerate(line.chords):
-        while len(chars) < line.chord_positions[idx]:
-            chars.append(' ')
+        position = line.chord_positions[idx]
         token = ch or ''
-        chars.extend(list(token))
+        tokens.append((position, token))
+        max_len = max(max_len, position + len(token))
+    chars: list[str] = [' '] * max_len
+    for position, token in tokens:
+        for offset, character in enumerate(token):
+            target_index = position + offset
+            if target_index >= len(chars):
+                chars.extend([' '] * (target_index + 1 - len(chars)))
+            chars[target_index] = character
     return ''.join(chars)
 
 
