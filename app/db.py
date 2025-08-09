@@ -33,7 +33,7 @@ songs = Table(
     Column('translated_title', String(255), nullable=False, index=True),
     Column('artist', String(255), nullable=True, index=True),
     Column('chordpro_content', Text, nullable=False),
-    Column('default_key', String(3), nullable=True),
+    Column('default_key', String(3), nullable=False),
     Column('youtube_url', String(500), nullable=True),
     Column('songlink_url', String(500), nullable=True),
     Column('is_draft', Boolean, nullable=False, server_default=text('false')),

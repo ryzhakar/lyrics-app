@@ -8,7 +8,13 @@ from app.admin import SongAdmin
 @pytest.mark.asyncio
 async def test_song_admin_on_model_change_accepts_valid_content() -> None:
     model = type('M', (), {'chordpro_content': '[C]Line'})()
-    await SongAdmin.__dict__['on_model_change'](None, {}, model, True, object())
+    await SongAdmin.__dict__['on_model_change'](
+        None,
+        {'default_key': 'C'},
+        model,
+        True,
+        object(),
+    )
 
 
 @pytest.mark.asyncio

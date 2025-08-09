@@ -131,6 +131,7 @@ async def test_repository_include_drafts_queries() -> None:
                 translated_title='Public',
                 artist='A',
                 chordpro_content='text',
+                default_key='C',
                 is_draft=False,
             ),
         )
@@ -139,6 +140,7 @@ async def test_repository_include_drafts_queries() -> None:
                 translated_title='Private',
                 artist='B',
                 chordpro_content='text',
+                default_key='C',
                 is_draft=True,
             ),
         )
