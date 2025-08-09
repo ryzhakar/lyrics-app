@@ -163,3 +163,6 @@ def test_full_render_reflects_sections_and_chords_positions() -> None:
     assert idx != -1
     before = html[max(0, idx - 64) : idx]
     assert '<pre class="chords">' not in before
+
+    # Chords-only lines render as tokens separated by spaces (no collapse)
+    assert '<pre class="chords">B A B</pre>' in html

@@ -11,6 +11,9 @@ def build_chord_line(line: LineBlock, show_chords: bool) -> str:
     """Build a chord line preserving positions."""
     if not show_chords:
         return ''
+    if not line.lyrics.strip() and any(line.chords):
+        chord_tokens: list[str] = [ch or '' for ch in line.chords if ch]
+        return ' '.join(chord_tokens)
     max_len = 0
     tokens: list[tuple[int, str]] = []
     for idx, ch in enumerate(line.chords):
