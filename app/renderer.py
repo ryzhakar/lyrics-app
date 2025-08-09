@@ -36,7 +36,8 @@ def render_parsed_song(parsed: ParsedSong, show_chords: bool) -> str:
     parts: list[str] = []
     for section in parsed.sections:
         parts.append('<section class="song-section">')
-        parts.append(f'<h3 class="section-header">{escape(section.name)}</h3>')
+        if section.name:
+            parts.append(f'<h3 class="section-header">{escape(section.name)}</h3>')
         for line in section.lines:
             chord_line = build_chord_line(line, show_chords)
             lyric_line = escape(line.lyrics)

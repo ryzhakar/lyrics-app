@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 CHORD_PATTERN = re.compile(r'\[([^\]]+)\]')
 SECTION_START_PATTERN = re.compile(r'\{start_of_section:\s*([^}]+)\}', re.IGNORECASE)
+SECTION_START_EMPTY_PATTERN = re.compile(r'\{start_of_section\}', re.IGNORECASE)
 SECTION_END_PATTERN = re.compile(r'\{end_of_section\}', re.IGNORECASE)
 
 
@@ -73,14 +74,15 @@ def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901, PLR0912
             if current_section is not None:
                 current_section.lines.append(LineBlock([], [], ''))
             continue
-        start_match = SECTION_START_PATTERN.fullmatch(line.strip())
+        start_named = SECTION_START_PATTERN.fullmatch(line.strip())
+        start_empty = SECTION_START_EMPTY_PATTERN.fullmatch(line.strip())
         end_match = SECTION_END_PATTERN.fullmatch(line.strip())
-        if start_match:
+        if start_named or start_empty:
             if current_section is not None and not current_is_implicit:
                 raise ParseError('Nested sections are not supported')
             if current_section is not None and current_is_implicit:
                 sections.append(current_section)
-            section_name = start_match.group(1).strip()
+            section_name = start_named.group(1).strip() if start_named else ''
             current_section = Section(section_name, [])
             current_is_implicit = False
             continue
@@ -92,7 +94,11 @@ def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901, PLR0912
             current_is_implicit = False
             continue
         stripped = line.strip()
-        if stripped.startswith('{') and stripped.endswith('}') and not (start_match or end_match):
+        if (
+            stripped.startswith('{')
+            and stripped.endswith('}')
+            and not (start_named or start_empty or end_match)
+        ):
             continue
         no_chords = CHORD_PATTERN.sub('', line)
         if '[' in no_chords or ']' in no_chords:

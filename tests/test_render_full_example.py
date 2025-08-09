@@ -142,6 +142,8 @@ def test_full_render_reflects_sections_and_chords_positions() -> None:
     # Section headers present
     for name in ['Куплет 1', 'Приспів', 'Break', 'Заспів', 'Інтерлюдія', 'Міст 1', 'Міст 2']:
         assert f'<h3 class="section-header">{name}</h3>' in html
+    # No header for anonymous sections
+    assert '<h3 class="section-header"></h3>' not in html
 
     # Verify a specific lyric line and chord positions in first Приспів by exact HTML block match
     pryspiv = next(s for s in parsed.sections if s.name.strip().startswith('Приспів'))

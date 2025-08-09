@@ -23,3 +23,10 @@ def test_nested_section_raises() -> None:
 def test_unmatched_end_raises() -> None:
     with pytest.raises(ParseError):
         parse_chordpro('{end_of_section}')
+
+
+def test_anonymous_section_parses_and_renders_without_header() -> None:
+    content = '{start_of_section}\n[C]Line\n{end_of_section}'
+    parsed = parse_chordpro(content)
+    assert len(parsed.sections) == 1
+    assert parsed.sections[0].name == ''
