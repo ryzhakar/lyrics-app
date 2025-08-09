@@ -104,7 +104,10 @@ async def render_setlist(
         row = await get_song_by_id(conn, song_id)
         if not row or row.get('is_draft'):
             raise HTTPException(status_code=404, detail='Song not found')
-        parsed = parse_chordpro(row['chordpro_content'])
+        try:
+            parsed = parse_chordpro(row['chordpro_content'])
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail='Song content cannot be parsed') from exc
         semitones = compute_semitone_interval(row.get('default_key'), target_key)
         for section in parsed.sections:
             for _idx, ch in enumerate(section.lines):

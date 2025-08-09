@@ -38,7 +38,8 @@ class SongAdmin(ModelView, model=SongModel):
     ) -> None:
         """Validate ChordPro before saving."""
         _ = (is_created, request)
-        content = data.get('chordpro_content') or model.chordpro_content
+        raw = data.get('chordpro_content') if 'chordpro_content' in data else model.chordpro_content
+        content: str = str(raw)
         parse_chordpro(content)
 
 

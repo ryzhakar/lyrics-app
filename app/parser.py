@@ -61,7 +61,7 @@ def tokenize_line(line: str) -> tuple[list[str | None], list[int], str]:
     return chords, positions, lyrics
 
 
-def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901
+def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901, PLR0912
     """Parse ChordPro content into a structured song."""
     sections: list[Section] = []
     current_section: Section | None = None
@@ -91,6 +91,12 @@ def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901
             current_section = None
             current_is_implicit = False
             continue
+        stripped = line.strip()
+        if ('{' in stripped or '}' in stripped) and not (start_match or end_match):
+            raise ParseError('Invalid section syntax')
+        no_chords = CHORD_PATTERN.sub('', line)
+        if '[' in no_chords or ']' in no_chords:
+            raise ParseError('Invalid chord syntax')
         chords, positions, lyrics = tokenize_line(line)
         line_block = LineBlock(chords, positions, lyrics)
         if current_section is None:
