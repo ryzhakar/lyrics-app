@@ -44,18 +44,31 @@ def compute_semitone_interval(from_key: str | None, to_key: str | None) -> int:
     return (b - a) % 12
 
 
-SHARP_KEYS = {'C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#'}
-FLAT_KEYS = {'F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'}
+MAJOR_SHARP_PREF = {'G', 'D', 'A', 'E', 'B', 'F#'}
+MAJOR_FLAT_PREF = {'C', 'F', 'Bb', 'Eb', 'Ab', 'Db'}
+
+MINOR_SHARP_PREF = {'Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m'}
+MINOR_FLAT_PREF = {'Dm', 'Gm', 'Cm', 'Fm', 'Bbm'}
 
 
 def prefer_sharps_for_key(key: str | None) -> bool:
-    """Choose accidental style based on key."""
+    """Choose accidental style based on major/minor key using circle-of-fifths."""
     if not key:
         return True
-    root = key.rstrip('m')
-    if root in SHARP_KEYS:
+    token = key.strip().replace(' ', '')
+    m = _ROOT_RE.match(token)
+    if not m:
         return True
-    return root not in FLAT_KEYS
+    root, tail = m.group(1), m.group(2)
+    is_minor = tail.lower() == 'm'
+    if is_minor:
+        normalized = f'{root}m'
+        if normalized in MINOR_SHARP_PREF:
+            return True
+        return normalized not in MINOR_FLAT_PREF
+    if root in MAJOR_SHARP_PREF:
+        return True
+    return root not in MAJOR_FLAT_PREF
 
 
 def _respell_note(note: str, prefer_sharps: bool) -> str:
