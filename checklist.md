@@ -1,6 +1,6 @@
 ### Iteration 1 (v1.0): Minimum Playable Product — Checklist
 
-- [ ] Project scaffolding
+- [x] Project scaffolding
   - [x] Confirm Python >=3.11 and `uv` workflow (install, run, export)
   - [x] Create app structure: `app/`, `app/templates/`, `static/css/`, `static/js/`
   - [x] Add FastAPI entrypoint `app/main.py` with Jinja templates setup and health route
