@@ -1,40 +1,147 @@
 :root {
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --bg: #fafafa;
+  --fg: #1b1f23;
+  --muted: #6b7280;
+  --accent: #2f6feb;
+  --separator: #e5e7eb;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --lyrics: 'Roboto Slab', 'Georgia', serif;
+  --ui: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Noto Sans, 'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body.dark {
-  background: #0f1214;
-  color: #e6e6e6;
+  --bg: #0f1114;
+  --fg: #e6e6e6;
+  --muted: #9aa1ab;
+  --separator: #1f2329;
 }
 
+main.container {
+  max-width: 820px;
+  padding: 72px 16px 64px;
+}
+.topbar { position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid var(--separator); }
+.topbar.hide { transform: translateY(-100%); transition: transform .18s ease; }
+.topbar-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; max-width: 940px; margin: 0 auto; padding: 10px 12px; }
+.brand { font-weight: 600; text-decoration: none; color: var(--fg); font-family: var(--lyrics); }
+.search input { width: 56vw; max-width: 520px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--separator); background: transparent; color: var(--fg); }
+.actions { display: flex; gap: 6px; }
+.icon-btn { appearance: none; border: 0; background: transparent; color: var(--muted); padding: 6px; border-radius: 8px; }
+.icon-btn:active { transform: translateY(1px); }
+.toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 12px; border-radius: 10px; opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
+
+
 .song-container {
+  display: grid;
+  gap: 28px;
   scroll-snap-type: y proximity;
 }
 
-.song-section {
-  scroll-snap-align: start;
-  scroll-margin-top: 2rem;
+.song {
+  display: grid;
+  gap: 12px;
 }
 
-.section-header {
+.song-header {
   position: sticky;
-  top: 0;
-  background: inherit;
+  top: 44px;
+  padding: 8px 0 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--separator);
+  z-index: 20;
+}
+
+.song-header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 8px; }
+
+.song-title {
+  font-family: var(--lyrics);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+}
+
+.song-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.song-meta .dot::before {
+  content: '·';
+  margin: 0 8px;
+}
+
+.song-links { display: flex; gap: 8px; align-items: center; }
+.icon-link { color: var(--muted); text-decoration: none; }
+.icon-link:active { transform: translateY(1px); }
+
+.song-section { scroll-snap-align: start; scroll-margin-top: 48px; }
+
+.section-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  position: sticky;
+  top: 86px;
   z-index: 10;
+  background: var(--bg);
+  padding: 8px 0 4px;
+}
+
+/* subtle blur as content approaches sticky headers */
+.song-header::after, .section-header::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -12px; height: 12px;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--bg) 0%, transparent), transparent);
 }
 
 pre.chords, pre.lyrics {
-  font-family: var(--mono);
   margin: 0;
   white-space: pre;
 }
 
-.song-separator {
-  margin: 2rem 0;
+pre.chords {
+  font-family: var(--mono);
+  color: var(--accent);
+  font-size: 14px;
+  line-height: 1.25;
 }
 
-.font-large { font-size: 1.25rem; }
+pre.lyrics {
+  font-family: var(--lyrics);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.song-separator { margin: 28px 0; border: 0; height: 1px; background: var(--separator); }
+
+.font-large { font-size: 1.1rem; }
 .font-normal { font-size: 1rem; }
+
+@media (min-width: 720px) {
+  .song-title { font-size: 20px; }
+  pre.chords { font-size: 15px; }
+  pre.lyrics { font-size: 18px; }
+}
 
 @media print {
   form, nav, header, footer { display: none !important; }

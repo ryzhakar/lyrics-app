@@ -71,6 +71,7 @@ ignore = [
     "G004",      # Logging statement uses f-string - but may be worth it
     "RET504",    # Unnecessary assignment to before return statement, improves readability
     "PLR0913",   # Too many arguments in function definition (> 5)
+    "C901",      # function is too complex - allow pragmatic route handlers
     "N818",      # Exception name `` should be named with an Error suffix, prone to false positives
 
     ## conflicts with a twin

@@ -62,7 +62,7 @@ def tokenize_line(line: str) -> tuple[list[str | None], list[int], str]:
     return chords, positions, lyrics
 
 
-def parse_chordpro(content: str) -> ParsedSong:  # noqa: C901, PLR0912
+def parse_chordpro(content: str) -> ParsedSong:  # noqa: PLR0912
     """Parse ChordPro content into a structured song."""
     sections: list[Section] = []
     current_section: Section | None = None

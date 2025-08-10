@@ -123,8 +123,55 @@ async def render_setlist(
                 ]
         html = render_parsed_song(parsed, show_chords=bool(chords))
         title = str(row.get('translated_title'))
-        artist = f' - {row["artist"]}' if row.get('artist') else ''
-        header = f'<header class="song-header">{title}{artist}</header>'
+        artist = str(row.get('artist') or '')
+        meta_parts: list[str] = []
+        if artist:
+            meta_parts.append(f'<span class="meta-item artist">{artist}</span>')
+        # Display the effective (possibly transposed) key if target provided
+        eff_key = target_key or row.get('default_key')
+        if eff_key:
+            meta_parts.append(f'<span class="meta-item key">Key: {eff_key}</span>')
+        meta_html = ''
+        if meta_parts:
+            sep = '<span class="dot"></span>'
+            meta_html = f'<div class="song-meta">{sep.join(meta_parts)}</div>'
+        # streaming links (icons)
+        yt = str(row.get('youtube_url') or '')
+        sl = str(row.get('songlink_url') or '')
+        links: list[str] = []
+        if yt:
+            yt_icon = (
+                '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">'
+                '<path fill="currentColor" '
+                'd="M10 15l5.19-3L10 9v6Zm11-3a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z"/>'
+                '</svg>'
+            )
+            links.append(
+                '<a class="icon-link" href="'
+                + yt
+                + '" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube">'
+                + yt_icon
+                + '</a>',
+            )
+        if sl:
+            cd_icon = (
+                '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">'
+                '<path fill="currentColor" '
+                'd="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm1 5 3 3-5 5H8v-3l5-5Z"/>'
+                '</svg>'
+            )
+            links.append(
+                '<a class="icon-link" href="'
+                + sl
+                + '" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming">'
+                + cd_icon
+                + '</a>',
+            )
+        links_html = ''.join(links)
+        header = (
+            f'<header class="song-header"><div class="song-title">{title}</div>{meta_html}'
+            f'<div class="song-links">{links_html}</div></header>'
+        )
         article = f'<article class="song">{header}{html}</article>'
         blocks.append(article)
     return templates.TemplateResponse(
