@@ -37,21 +37,46 @@
         const root = document.documentElement;
         const topbar = document.querySelector('.topbar');
         let lastScrollY = window.scrollY;
-        let targetOffset = 0;
+        let targetOffset = 0; // current hidden amount in px
+        let velocity = 0;     // pixels per event
+        let ticking = false;
+        const REVEAL_THRESHOLD = 28; // tolerance before revealing
+        const HIDE_THRESHOLD = 56;   // tolerance before hiding further
+        const FRICTION = 0.9;        // momentum smoothing
         function computeTopbar(){
           const h = topbar.getBoundingClientRect().height;
           root.style.setProperty('--topbar-h', `${h}px`);
           root.style.setProperty('--topbar-gap', `${Math.max(0, h - targetOffset)}px`);
         }
         function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+        function apply(){
+          const maxHide = topbar.getBoundingClientRect().height;
+          targetOffset = clamp(targetOffset, 0, maxHide);
+          topbar.style.transform = `translateY(${-targetOffset}px)`;
+          root.style.setProperty('--topbar-gap', `${Math.max(0, maxHide - targetOffset)}px`);
+          ticking = false;
+        }
         function onScroll(){
           const y = window.scrollY;
           const delta = y - lastScrollY;
           lastScrollY = y;
-          const maxHide = topbar.getBoundingClientRect().height;
-          targetOffset = clamp(targetOffset + delta, 0, maxHide);
-          topbar.style.transform = `translateY(${-targetOffset}px)`;
-          root.style.setProperty('--topbar-gap', `${Math.max(0, maxHide - targetOffset)}px`);
+          // spring-loaded overscroll: ignore negative deltas when already at top
+          if (y <= 0 && delta < 0) {
+            velocity = 0;
+            targetOffset = 0;
+          } else {
+            velocity = velocity * FRICTION + delta;
+            const maxHide = topbar.getBoundingClientRect().height;
+            // detent: require thresholds to switch direction for stability
+            if (delta < 0 && (maxHide - targetOffset) < REVEAL_THRESHOLD) {
+              targetOffset += delta * 0.5; // slower reveal near detent
+            } else if (delta > 0 && targetOffset < HIDE_THRESHOLD) {
+              targetOffset += delta * 0.5; // slower hide until threshold crossed
+            } else {
+              targetOffset += delta;
+            }
+          }
+          if(!ticking){ requestAnimationFrame(apply); ticking = true; }
         }
         computeTopbar();
         if(window.ResizeObserver){ new ResizeObserver(computeTopbar).observe(topbar); }
