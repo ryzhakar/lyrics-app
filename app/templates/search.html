@@ -1,17 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
+  <div class="selected-panel" id="selected-panel" aria-live="polite">
+    <div class="selected-header">
+      <div class="selected-title">Selected (<span id="sel-count">0</span>)</div>
+      <div class="selected-actions">
+        <button type="button" class="icon-btn" id="open-setlist" aria-label="Open setlist" title="Open setlist">Open Setlist</button>
+        <button type="button" class="icon-btn" id="clear-all" aria-label="Clear selection" title="Clear selection">Clear All</button>
+      </div>
+    </div>
+    <ol class="selected-list" id="sel-list"></ol>
+  </div>
+
   <div class="results">
     {% for s in results %}
-      <div class="result-row">
-        <a class="result-main" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
+      <div class="result-row"
+           data-id="{{ s.id }}"
+           data-default-key="{{ s.default_key or '' }}"
+           data-title="{{ s.translated_title }}"
+           data-artist="{{ s.artist or '' }}">
+        <div class="result-main" role="button" tabindex="0" aria-pressed="false">
           <div class="song-title">{{ s.translated_title }}</div>
           <div class="song-meta">
             {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
             {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
             {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
           </div>
-        </a>
+        </div>
         <div class="result-actions">
+          <a class="icon-link" href="/?s={{ s.id }}:{{ s.default_key or '' }}" title="Open" aria-label="Open">Open</a>
           {% if s.youtube_url %}
             <a class="icon-link youtube" href="{{ s.youtube_url }}" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>
           {% endif %}
@@ -22,4 +38,104 @@
       </div>
     {% endfor %}
   </div>
+
+  <script>
+    (function(){
+      const form = document.querySelector('form.search');
+      function ensureHiddenS(value){
+        if(!form) return;
+        let hidden = form.querySelector('input[name="s"][type="hidden"]');
+        if(!hidden){ hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.name = 's'; form.appendChild(hidden); }
+        hidden.value = value || '';
+      }
+      function parseS(raw){
+        if(!raw) return [];
+        return raw.split(',').map(t=>t.trim()).filter(Boolean).map(token=>{
+          const [id, key] = token.split(':');
+          return {id, key: key || ''};
+        });
+      }
+      function buildS(items){ return items.map(it=> it.key ? `${it.id}:${it.key}` : `${it.id}:`).join(','); }
+      function getQS(){ return new URLSearchParams(window.location.search); }
+      function setURLWithS(items){ const qs = getQS(); const s = buildS(items); if(s){ qs.set('s', s); } else { qs.delete('s'); } const url = `${window.location.pathname}?${qs.toString()}`; history.replaceState(null, '', url); ensureHiddenS(s); }
+
+      const metaKey = 'setlistMeta';
+      function readMeta(){ try{ return JSON.parse(sessionStorage.getItem(metaKey) || '{}'); }catch{ return {}; } }
+      function writeMeta(meta){ try{ sessionStorage.setItem(metaKey, JSON.stringify(meta)); }catch{} }
+
+      let selection = parseS(getQS().get('s') || '');
+      ensureHiddenS(buildS(selection));
+
+      function isSelected(id){ return selection.findIndex(it=>it.id===id) !== -1; }
+      function addSelection(id, key){ if(isSelected(id)) return; selection.push({id, key}); setURLWithS(selection); render(); }
+      function removeSelection(id){ selection = selection.filter(it=>it.id!==id); setURLWithS(selection); render(); }
+      function moveSelection(id, dir){ const idx = selection.findIndex(it=>it.id===id); if(idx === -1) return; const to = dir==='up' ? idx-1 : idx+1; if(to < 0 || to >= selection.length) return; const tmp = selection[idx]; selection[idx] = selection[to]; selection[to] = tmp; setURLWithS(selection); render(); }
+
+      function render(){
+        const list = document.getElementById('sel-list');
+        const count = document.getElementById('sel-count');
+        if(!list || !count) return;
+        list.innerHTML = '';
+        count.textContent = String(selection.length);
+        const meta = readMeta();
+        selection.forEach((it, i)=>{
+          const li = document.createElement('li');
+          li.className = 'selected-item';
+          const title = (meta[it.id] && meta[it.id].title) || it.id;
+          const artist = (meta[it.id] && meta[it.id].artist) || '';
+          const label = artist ? `${title} — ${artist}` : title;
+          const left = document.createElement('div'); left.textContent = label; li.appendChild(left);
+          const controls = document.createElement('div'); controls.className = 'selected-controls';
+          const up = document.createElement('button'); up.type = 'button'; up.className = 'icon-btn'; up.textContent = '↑'; up.title = 'Move up'; up.setAttribute('aria-label','Move up'); if(i===0){ up.disabled = true; }
+          const down = document.createElement('button'); down.type = 'button'; down.className = 'icon-btn'; down.textContent = '↓'; down.title = 'Move down'; down.setAttribute('aria-label','Move down'); if(i===selection.length-1){ down.disabled = true; }
+          const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn'; rm.textContent = '×'; rm.title = 'Remove'; rm.setAttribute('aria-label','Remove');
+          up.addEventListener('click', ()=> moveSelection(it.id, 'up'), {passive:true});
+          down.addEventListener('click', ()=> moveSelection(it.id, 'down'), {passive:true});
+          rm.addEventListener('click', ()=> removeSelection(it.id), {passive:true});
+          controls.appendChild(up); controls.appendChild(down); controls.appendChild(rm);
+          li.appendChild(controls);
+          list.appendChild(li);
+        });
+        document.querySelectorAll('.result-row').forEach(row=>{
+          const id = row.getAttribute('data-id');
+          const idx = selection.findIndex(it=>it.id===id);
+          if(idx !== -1){
+            row.classList.add('selected');
+            row.style.setProperty('--sel-n', `'${idx+1}'`);
+            const main = row.querySelector('.result-main'); if(main){ main.setAttribute('aria-pressed','true'); }
+          } else {
+            row.classList.remove('selected');
+            row.style.removeProperty('--sel-n');
+            const main = row.querySelector('.result-main'); if(main){ main.setAttribute('aria-pressed','false'); }
+          }
+        });
+      }
+
+      document.querySelectorAll('.result-row .result-main').forEach(el=>{
+        el.addEventListener('click', function(){
+          const row = this.closest('.result-row'); if(!row) return;
+          const id = row.getAttribute('data-id');
+          const defKey = row.getAttribute('data-default-key') || '';
+          const meta = readMeta();
+          meta[id] = {
+            title: row.getAttribute('data-title') || id,
+            artist: row.getAttribute('data-artist') || '',
+            default_key: defKey,
+          };
+          writeMeta(meta);
+          if(isSelected(id)){ removeSelection(id); } else { addSelection(id, defKey); }
+        }, {passive:true});
+        el.addEventListener('keydown', function(ev){ if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); this.click(); } });
+      });
+
+      const openBtn = document.getElementById('open-setlist');
+      if(openBtn){ openBtn.addEventListener('click', function(){ const s = buildS(selection); const url = s ? `/?s=${encodeURIComponent(s)}` : '/'; window.location.href = url; }, {passive:true}); }
+      const clearBtn = document.getElementById('clear-all');
+      if(clearBtn){ clearBtn.addEventListener('click', function(){ selection = []; setURLWithS(selection); render(); }, {passive:true}); }
+
+      if(form){ form.addEventListener('submit', function(){ ensureHiddenS(buildS(selection)); }); }
+
+      render();
+    })();
+  </script>
 {% endblock %}

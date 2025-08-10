@@ -157,6 +157,18 @@ pre.lyrics {
 .result-main .song-meta .dot::before { content: '·'; margin: 0 6px; }
 .result-actions { display: flex; gap: 10px; }
 
+/* setlist selection UI */
+.selected-panel { display: grid; gap: 8px; margin-bottom: 12px; }
+.selected-header { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+.selected-title { font-weight: 600; font-size: 14px; color: var(--muted); }
+.selected-actions { display: flex; gap: 8px; }
+.selected-list { list-style: decimal inside; margin: 0; padding: 0; display: grid; gap: 6px; }
+.selected-item { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 8px 6px; border-radius: 10px; background: color-mix(in srgb, var(--separator) 24%, transparent); }
+.selected-controls { display: inline-flex; gap: 4px; }
+
+.result-row.selected { position: relative; }
+.result-row.selected::before { content: var(--sel-n, ''); position: absolute; left: -18px; top: 10px; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); color: var(--bg); font-size: 11px; line-height: 16px; text-align: center; }
+
 @media (min-width: 720px) {
   .song-title { font-size: 20px; }
   pre.chords { font-size: 15px; }
