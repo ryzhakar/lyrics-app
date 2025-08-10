@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-  <form action="/search" method="get">
-    <input type="search" name="q" placeholder="Search..." value="{{ query }}" />
-    <button type="submit">Search</button>
-  </form>
-  <ul>
+  <div class="results">
     {% for s in results %}
-      <li>
-        <a href="/?s={{ s.id }}:{{ s.default_key or '' }}">{{ s.translated_title }}{% if s.artist %} — {{ s.artist }}{% endif %}</a>
-      </li>
+      <a class="result-card" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
+        <div class="song-title">{{ s.translated_title }}</div>
+        <div class="song-meta">
+          {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
+          {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
+          {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
+        </div>
+      </a>
     {% endfor %}
-  </ul>
+  </div>
 {% endblock %}

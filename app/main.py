@@ -138,33 +138,21 @@ async def render_setlist(
         if meta_parts:
             sep = '<span class="dot"></span>'
             meta_html = f'<div class="song-meta">{sep.join(meta_parts)}</div>'
-        # streaming links (icons)
+        # streaming links
         yt = str(row.get('youtube_url') or '')
         sl = str(row.get('songlink_url') or '')
         links: list[str] = []
         if yt:
-            yt_icon = (
-                '<img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/'
-                'brand-youtube.svg" width="18" height="18" alt="">'
-            )
             links.append(
-                '<a class="icon-link" href="'
+                '<a class="icon-link youtube" href="'
                 + yt
-                + '" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube">'
-                + yt_icon
-                + '</a>',
+                + '" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>',
             )
         if sl:
-            cd_icon = (
-                '<img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/'
-                'brand-spotify.svg" width="18" height="18" alt="">'
-            )
             links.append(
-                '<a class="icon-link" href="'
+                '<a class="icon-link spotify" href="'
                 + sl
-                + '" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming">'
-                + cd_icon
-                + '</a>',
+                + '" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>',
             )
         links_html = ''.join(links)
         header = (

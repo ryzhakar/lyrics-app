@@ -63,8 +63,9 @@
         function refreshIcons(){
           const darkOn = (new URLSearchParams(window.location.search).get('dark')||'0') === '1' || document.body.classList.contains('dark');
           const chordsOn = (new URLSearchParams(window.location.search).get('chords')||'1') === '1';
-          const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/';
-          document.getElementById('theme-icon').src = darkOn ? `${base}sun.svg` : `${base}moon.svg`;
+          const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/';
+          const themeSet = (document.body.classList.contains('dark') || darkOn) ? 'filled' : 'outline';
+          document.getElementById('theme-icon').src = darkOn ? `${base}outline/sun.svg` : `${base}outline/moon.svg`;
           document.getElementById('chords-icon').src = chordsOn ? `${base}eyeglass.svg` : `${base}eyeglass-off.svg`;
         }
         refreshIcons();
