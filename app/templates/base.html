@@ -66,7 +66,7 @@
           const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/';
           const themeSet = (document.body.classList.contains('dark') || darkOn) ? 'filled' : 'outline';
           document.getElementById('theme-icon').src = darkOn ? `${base}outline/sun.svg` : `${base}outline/moon.svg`;
-          document.getElementById('chords-icon').src = chordsOn ? `${base}eyeglass.svg` : `${base}eyeglass-off.svg`;
+          document.getElementById('chords-icon').src = chordsOn ? `${base}outline/eyeglass.svg` : `${base}outline/eyeglass-off.svg`;
         }
         refreshIcons();
         document.getElementById('theme-toggle').addEventListener('click', function(){
