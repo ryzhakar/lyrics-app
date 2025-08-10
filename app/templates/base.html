@@ -68,6 +68,14 @@
           document.getElementById('theme-icon').src = darkOn ? `${base}outline/sun.svg` : `${base}outline/moon.svg`;
           document.getElementById('chords-icon').src = chordsOn ? `${base}outline/eyeglass.svg` : `${base}outline/eyeglass-off.svg`;
         }
+        // prevent iOS zoom jump by focusing next tick after setting font-size
+        const searchInput = document.querySelector('.search input');
+        if(searchInput){
+          searchInput.addEventListener('focus', () => {
+            // ensure caret aligns by forcing layout
+            searchInput.style.webkitTextSizeAdjust = '100%';
+          }, {passive:true});
+        }
         refreshIcons();
         document.getElementById('theme-toggle').addEventListener('click', function(){
           const cur = (qs.get('dark')||'0') === '1';
