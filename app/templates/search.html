@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="selected-panel" id="selected-panel" aria-live="polite">
+  <div id="search-hero" class="search-hero" aria-hidden="true">
+    <div class="hero-center">
+      <form action="/search" method="get" class="search search-large">
+        <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
+      </form>
+      <div class="hero-hint">Start typing to find songs. Add with the plus, tap title to open.</div>
+    </div>
+  </div>
+
+  <div class="selected-panel is-hidden" id="selected-panel" aria-live="polite">
     <div class="selected-header">
       <div class="selected-title">Selected (<span id="sel-count">0</span>)</div>
       <div class="selected-actions">
@@ -18,22 +27,24 @@
            data-default-key="{{ s.default_key or '' }}"
            data-title="{{ s.translated_title }}"
            data-artist="{{ s.artist or '' }}">
-        <div class="result-main" role="button" tabindex="0" aria-pressed="false">
-          <div class="song-title">{{ s.translated_title }}</div>
-          <div class="song-meta">
-            {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
-            {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
-            {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
-          </div>
+        <div class="result-main">
+          <a class="result-link" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
+            <div class="song-title">{{ s.translated_title }}</div>
+            <div class="song-meta">
+              {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
+              {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
+              {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
+            </div>
+          </a>
         </div>
         <div class="result-actions">
-          <a class="icon-link" href="/?s={{ s.id }}:{{ s.default_key or '' }}" title="Open" aria-label="Open">Open</a>
           {% if s.youtube_url %}
             <a class="icon-link youtube" href="{{ s.youtube_url }}" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>
           {% endif %}
           {% if s.songlink_url %}
             <a class="icon-link spotify" href="{{ s.songlink_url }}" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>
           {% endif %}
+          <button type="button" class="icon-btn plus-btn" title="Add to setlist" aria-label="Add to setlist">+</button>
         </div>
       </div>
     {% endfor %}
@@ -41,12 +52,14 @@
 
   <script>
     (function(){
-      const form = document.querySelector('form.search');
+      const forms = Array.from(document.querySelectorAll('form.search'));
       function ensureHiddenS(value){
-        if(!form) return;
-        let hidden = form.querySelector('input[name="s"][type="hidden"]');
-        if(!hidden){ hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.name = 's'; form.appendChild(hidden); }
-        hidden.value = value || '';
+        if(!forms.length) return;
+        forms.forEach(f => {
+          let hidden = f.querySelector('input[name="s"][type="hidden"]');
+          if(!hidden){ hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.name = 's'; f.appendChild(hidden); }
+          hidden.value = value || '';
+        });
       }
       function parseS(raw){
         if(!raw) return [];
@@ -66,6 +79,12 @@
       let selection = parseS(getQS().get('s') || '');
       ensureHiddenS(buildS(selection));
 
+      const panel = document.getElementById('selected-panel');
+      function syncPanelVisibility(){
+        if(!panel) return;
+        if(selection.length > 0){ panel.classList.remove('is-hidden'); } else { panel.classList.add('is-hidden'); }
+      }
+
       function isSelected(id){ return selection.findIndex(it=>it.id===id) !== -1; }
       function addSelection(id, key){ if(isSelected(id)) return; selection.push({id, key}); setURLWithS(selection); render(); }
       function removeSelection(id){ selection = selection.filter(it=>it.id!==id); setURLWithS(selection); render(); }
@@ -77,14 +96,31 @@
         if(!list || !count) return;
         list.innerHTML = '';
         count.textContent = String(selection.length);
+        syncPanelVisibility();
         const meta = readMeta();
         selection.forEach((it, i)=>{
           const li = document.createElement('li');
           li.className = 'selected-item';
           const title = (meta[it.id] && meta[it.id].title) || it.id;
           const artist = (meta[it.id] && meta[it.id].artist) || '';
-          const label = artist ? `${title} — ${artist}` : title;
-          const left = document.createElement('div'); left.textContent = label; li.appendChild(left);
+          const defKey = (meta[it.id] && meta[it.id].default_key) || '';
+          const stack = document.createElement('div');
+          stack.className = 'song-stack';
+          const titleEl = document.createElement('div');
+          titleEl.className = 'song-title';
+          titleEl.textContent = title;
+          stack.appendChild(titleEl);
+          const metaEl = document.createElement('div');
+          metaEl.className = 'song-meta';
+          if (artist) {
+            const a = document.createElement('span'); a.className = 'meta-item artist'; a.textContent = artist; metaEl.appendChild(a);
+          }
+          if (defKey) {
+            if (artist) { const dot = document.createElement('span'); dot.className = 'dot'; metaEl.appendChild(dot); }
+            const k = document.createElement('span'); k.className = 'meta-item key'; k.textContent = `Key: ${defKey}`; metaEl.appendChild(k);
+          }
+          if (metaEl.childElementCount) { stack.appendChild(metaEl); }
+          li.appendChild(stack);
           const controls = document.createElement('div'); controls.className = 'selected-controls';
           const up = document.createElement('button'); up.type = 'button'; up.className = 'icon-btn'; up.textContent = '↑'; up.title = 'Move up'; up.setAttribute('aria-label','Move up'); if(i===0){ up.disabled = true; }
           const down = document.createElement('button'); down.type = 'button'; down.className = 'icon-btn'; down.textContent = '↓'; down.title = 'Move down'; down.setAttribute('aria-label','Move down'); if(i===selection.length-1){ down.disabled = true; }
@@ -99,20 +135,20 @@
         document.querySelectorAll('.result-row').forEach(row=>{
           const id = row.getAttribute('data-id');
           const idx = selection.findIndex(it=>it.id===id);
+          const plus = row.querySelector('.plus-btn');
           if(idx !== -1){
             row.classList.add('selected');
-            row.style.setProperty('--sel-n', `'${idx+1}'`);
-            const main = row.querySelector('.result-main'); if(main){ main.setAttribute('aria-pressed','true'); }
+            if(plus){ plus.classList.add('is-active'); plus.textContent = String(idx+1); plus.setAttribute('title','Remove from setlist'); plus.setAttribute('aria-label','Remove from setlist'); }
           } else {
             row.classList.remove('selected');
-            row.style.removeProperty('--sel-n');
-            const main = row.querySelector('.result-main'); if(main){ main.setAttribute('aria-pressed','false'); }
+            if(plus){ plus.classList.remove('is-active'); plus.textContent = '+'; plus.setAttribute('title','Add to setlist'); plus.setAttribute('aria-label','Add to setlist'); }
           }
         });
       }
 
-      document.querySelectorAll('.result-row .result-main').forEach(el=>{
-        el.addEventListener('click', function(){
+      document.querySelectorAll('.plus-btn').forEach(btn=>{
+        btn.addEventListener('click', function(ev){
+          ev.preventDefault(); ev.stopPropagation();
           const row = this.closest('.result-row'); if(!row) return;
           const id = row.getAttribute('data-id');
           const defKey = row.getAttribute('data-default-key') || '';
@@ -125,7 +161,6 @@
           writeMeta(meta);
           if(isSelected(id)){ removeSelection(id); } else { addSelection(id, defKey); }
         }, {passive:true});
-        el.addEventListener('keydown', function(ev){ if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); this.click(); } });
       });
 
       const openBtn = document.getElementById('open-setlist');
@@ -133,8 +168,19 @@
       const clearBtn = document.getElementById('clear-all');
       if(clearBtn){ clearBtn.addEventListener('click', function(){ selection = []; setURLWithS(selection); render(); }, {passive:true}); }
 
-      if(form){ form.addEventListener('submit', function(){ ensureHiddenS(buildS(selection)); }); }
+      if(forms.length){ forms.forEach(f => f.addEventListener('submit', function(){ ensureHiddenS(buildS(selection)); })); }
 
+      function toggleHero(){
+        const hero = document.getElementById('search-hero');
+        const resultsWrap = document.querySelector('.results');
+        const q = (new URLSearchParams(window.location.search).get('q') || '').trim();
+        const isSearch = window.location.pathname === '/search';
+        const shouldShow = (window.__showSearchHero || (isSearch && !q)) && document.querySelectorAll('.result-row').length === 0;
+        if(hero){ hero.style.display = shouldShow ? 'grid' : 'none'; hero.setAttribute('aria-hidden', shouldShow ? 'false' : 'true'); }
+        if(resultsWrap){ resultsWrap.classList.toggle('is-hidden', shouldShow); }
+      }
+
+      toggleHero();
       render();
     })();
   </script>

@@ -48,6 +48,7 @@
   - [x] Create templates: `base.html`, `song.html` with mobile-first layout
   - [x] Add dark mode via CSS custom properties
   - [x] Add print styles to remove UI chrome
+  - [x] Add specific key picker popover (major/minor-constrained) in song header
 
 - [x] URL structure and routing
   - [x] Implement single/multi-song parsing from `/?s=<uuid>:<key>,...`

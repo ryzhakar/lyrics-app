@@ -102,7 +102,13 @@ async def render_setlist(
         return templates.TemplateResponse(
             request,
             'search.html',
-            {'results': recent, 'selected': [], 'query': ''},
+            {
+                'results': recent,
+                'selected': [],
+                'query': '',
+                'dark': bool(dark),
+                'font': font or 'normal',
+            },
         )
     blocks: list[str] = []
     for song_id, target_key in pairs:
@@ -157,7 +163,11 @@ async def render_setlist(
             '</button>'
         )
         key_label = f'<div class="key-label">Key: {eff_key or "&nbsp;"}</div>'
-        key_html = f'<div class="song-key" {key_base_attrs}>{up_btn}{key_label}{down_btn}</div>'
+        key_html = (
+            f'<div class="song-key" {key_base_attrs}>{up_btn}{key_label}{down_btn}</div>'
+            if bool(chords)
+            else ''
+        )
         header = (
             '<header class="song-header">'
             f'{left_stack}'
@@ -174,6 +184,7 @@ async def render_setlist(
             'content': '<hr class="song-separator">'.join(blocks),
             'dark': bool(dark),
             'font': font or 'normal',
+            'chords': bool(chords),
         },
     )
 
@@ -182,12 +193,20 @@ async def render_setlist(
 async def search(
     request: Request,
     q: Annotated[str, Query()] = '',
+    dark: Annotated[int | None, Query()] = None,
+    font: Annotated[str | None, Query()] = None,
     conn: Annotated[AsyncConnection, Depends(get_connection)] = Depends(get_connection),  # noqa: FAST002
 ) -> HTMLResponse:
     """Search and list songs."""
-    results = await search_songs(conn, q) if q else []
+    results = await search_songs(conn, q, limit=200) if q else []
     return templates.TemplateResponse(
         request,
         'search.html',
-        {'results': results, 'selected': [], 'query': q},
+        {
+            'results': results,
+            'selected': [],
+            'query': q,
+            'dark': bool(dark),
+            'font': font or 'normal',
+        },
     )

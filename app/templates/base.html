@@ -8,14 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto+Slab:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/base.css" />
-    <script defer src="/static/js/disintegrate.js"></script>
   </head>
   <body class="{{ 'dark' if dark else '' }} font-{{ font or 'normal' }}">
     <nav class="topbar">
       <div class="topbar-row">
         <a href="/" class="brand" aria-label="Home">Lyrics</a>
         <form action="/search" method="get" class="search">
-          <input type="search" name="q" placeholder="Search…" value="{{ query or '' }}" />
+          <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
         </form>
         <div class="actions">
           <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/moon.svg" width="22" height="22" alt=""></button>
@@ -27,6 +26,7 @@
     <main class="container">
       {% block content %}{% endblock %}
     </main>
+
     <div id="toast" class="toast" role="status" aria-live="polite" aria-hidden="true"></div>
     <script>
       (function(){
@@ -37,6 +37,12 @@
         const chords = qs.get('chords');
         const root = document.documentElement;
         const topbar = document.querySelector('.topbar');
+        if (window.location.pathname === '/' && !s) {
+          try {
+            window.__showSearchHero = true;
+            history.replaceState(null, '', '/search' + (window.location.search || ''));
+          } catch {}
+        }
         let lastScrollY = window.scrollY;
         let targetOffset = 0; // current hidden amount in px
         let velocity = 0;     // pixels per event
@@ -54,6 +60,7 @@
           const maxHide = topbar.getBoundingClientRect().height;
           targetOffset = clamp(targetOffset, 0, maxHide);
           topbar.style.transform = `translateY(${-targetOffset}px)`;
+          document.body.style.backgroundPosition = `0px ${-window.scrollY}px`;
           root.style.setProperty('--topbar-gap', `${Math.max(0, maxHide - targetOffset)}px`);
           ticking = false;
         }
@@ -148,22 +155,104 @@
         function buildSParam(items){
           return items.map(it=> it.key ? `${it.id}:${it.key}` : `${it.id}:`).join(',');
         }
-        const NOTE_ORDER_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-        const FLAT_TO_SHARP = { 'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#' };
-        function normalizeRoot(note){ return FLAT_TO_SHARP[note] || note; }
         function parseKeyToken(key){
           if(!key) return {root:'', minor:false};
           const m = key.match(/^([A-G](?:#|b)?)(m)?$/);
           if(!m) return {root:'', minor:false};
-          return {root: normalizeRoot(m[1]), minor: !!m[2]};
+          return {root: m[1], minor: !!m[2]};
         }
         function stepKey(key, dir){
-          const {root, minor} = parseKeyToken(key);
-          if(!root){ return key; }
-          const idx = NOTE_ORDER_SHARP.indexOf(root);
-          if(idx < 0) return key;
+          const token = parseKeyToken(key);
+          if(!token.root){ return key; }
+          const list = token.minor ? CHROMATIC_MINOR_KEYS : CHROMATIC_MAJOR_KEYS;
+          const idx = list.indexOf(key);
+          if(idx < 0){ return key; }
           const next = (idx + (dir === 'up' ? 1 : -1) + 12) % 12;
-          return NOTE_ORDER_SHARP[next] + (minor ? 'm' : '');
+          return list[next];
+        }
+        const CIRCLE_MAJOR_KEYS = ['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'];
+        const CIRCLE_MINOR_KEYS = ['Am','Em','Bm','F#m','C#m','G#m','D#m','Bbm','Fm','Cm','Gm','Dm'];
+        const CHROMATIC_MAJOR_KEYS = ['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+        const CHROMATIC_MINOR_KEYS = ['Am','Bbm','Bm','Cm','C#m','Dm','D#m','Em','Fm','F#m','Gm','G#m'];
+        function keysForContext(effectiveKey){
+          const t = parseKeyToken(effectiveKey);
+          return t.minor ? CIRCLE_MINOR_KEYS : CIRCLE_MAJOR_KEYS;
+        }
+        function closeAnyKeyMenus(){
+          document.querySelectorAll('.key-popover').forEach(el=>el.remove());
+          document.querySelectorAll('.song-key').forEach(w=>w.classList.remove('menu-open'));
+        }
+        function setSongKey(songId, newKey){
+          const qs2 = new URLSearchParams(window.location.search);
+          const items = parseSParam(qs2.get('s') || '');
+          const updated = items.map(it => it.id === songId ? {id: it.id, key: newKey} : it);
+          qs2.set('s', buildSParam(updated));
+          window.location.search = qs2.toString();
+        }
+        function saveScrollRestoreForWrap(wrap){
+          try{
+            const rect = wrap.getBoundingClientRect();
+            const songId = wrap.getAttribute('data-song-id');
+            sessionStorage.setItem('scrollRestore', JSON.stringify({ songId, desiredTop: rect.top }));
+          }catch{}
+        }
+        function applyScrollRestore(){
+          try{
+            const raw = sessionStorage.getItem('scrollRestore');
+            if(!raw) return;
+            sessionStorage.removeItem('scrollRestore');
+            const data = JSON.parse(raw);
+            const el = document.querySelector(`.song-key[data-song-id="${data.songId}"]`);
+            if(!el) return;
+            const rect = el.getBoundingClientRect();
+            const dy = rect.top - data.desiredTop;
+            const target = Math.max(0, window.scrollY + dy);
+            window.scrollTo({top: target, left: 0, behavior: 'auto'});
+          }catch{}
+        }
+        function openKeyMenu(wrap){
+          closeAnyKeyMenus();
+          const songId = wrap.getAttribute('data-song-id');
+          const effectiveKey = wrap.getAttribute('data-effective-key') || wrap.getAttribute('data-default-key') || '';
+          const list = keysForContext(effectiveKey);
+          const pop = document.createElement('div');
+          pop.className = 'key-popover';
+          list.forEach(k => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            const isActive = (k === effectiveKey);
+            btn.className = 'key-option' + (isActive ? ' active' : '');
+            btn.textContent = k;
+            btn.addEventListener('click', (ev)=>{ ev.stopPropagation(); saveScrollRestoreForWrap(wrap); setSongKey(songId, k); }, {passive:false});
+            pop.appendChild(btn);
+          });
+          wrap.classList.add('menu-open');
+          wrap.appendChild(pop);
+          const onDocClick = (ev)=>{
+            if(!wrap.contains(ev.target)){
+              closeAnyKeyMenus();
+              document.removeEventListener('click', onDocClick, true);
+              document.removeEventListener('keydown', onKey, true);
+            }
+          };
+          const onKey = (ev)=>{
+            if(ev.key === 'Escape'){
+              closeAnyKeyMenus();
+              document.removeEventListener('click', onDocClick, true);
+              document.removeEventListener('keydown', onKey, true);
+            }
+          };
+          setTimeout(()=>{
+            document.addEventListener('click', onDocClick, true);
+            document.addEventListener('keydown', onKey, true);
+          }, 0);
+        }
+        function onKeyLabelClick(ev){
+          const el = ev.currentTarget;
+          const wrap = el.closest('.song-key');
+          if(!wrap) return;
+          if(wrap.classList.contains('menu-open')){ closeAnyKeyMenus(); return; }
+          openKeyMenu(wrap);
         }
         function onTransposeClick(ev){
           const btn = ev.currentTarget;
@@ -182,12 +271,17 @@
             }
             return it;
           });
+          saveScrollRestoreForWrap(wrap);
           qs2.set('s', buildSParam(updated));
           window.location.search = qs2.toString();
         }
         document.querySelectorAll('.transpose-btn').forEach(btn=>{
           btn.addEventListener('click', onTransposeClick, {passive:true});
         });
+        document.querySelectorAll('.song-key .key-label').forEach(lbl=>{
+          lbl.addEventListener('click', onKeyLabelClick, {passive:true});
+        });
+        applyScrollRestore();
       })();
     </script>
   </body>
