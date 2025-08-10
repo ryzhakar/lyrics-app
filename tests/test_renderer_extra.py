@@ -22,3 +22,16 @@ def test_render_parsed_song_escapes_html() -> None:
     html = render_parsed_song(ParsedSong([section], []), True)
     assert '&lt;Verse&gt;' in html
     assert '&lt;b&gt;text&lt;/b&gt;' in html
+
+
+def test_build_chord_line_resolves_overlaps_with_spacing() -> None:
+    lb = LineBlock(['Ebm', 'Ab/Eb', 'Bb/Eb'], [4, 8, 12], 'О — о — о')
+    line = build_chord_line(lb, True)
+    assert 'Ebm' in line
+    assert 'Ab/Eb' in line
+    assert 'Bb/Eb' in line
+    first = line.index('Ebm')
+    second = line.index('Ab/Eb')
+    third = line.index('Bb/Eb')
+    assert second >= first + len('Ebm') + 1
+    assert third >= second + len('Ab/Eb') + 1

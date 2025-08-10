@@ -8,23 +8,31 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def build_chord_line(line: LineBlock, show_chords: bool) -> str:
-    """Build a chord line preserving positions."""
+    """Build a chord line preserving positions and avoiding overlaps with spacing."""
     if not show_chords:
         return ''
-    if not line.lyrics.strip() and any(line.chords):
-        chord_tokens: list[str] = [ch or '' for ch in line.chords if ch]
-        return ' '.join(chord_tokens)
-    max_len = 0
-    tokens: list[tuple[int, str]] = []
+    raw_tokens: list[tuple[int, str]] = []
     for idx, ch in enumerate(line.chords):
-        position = line.chord_positions[idx]
         token = ch or ''
-        tokens.append((position, token))
-        max_len = max(max_len, position + len(token))
+        if not token:
+            continue
+        position = line.chord_positions[idx]
+        raw_tokens.append((position, token))
+    if not raw_tokens:
+        return ''
+    raw_tokens.sort(key=lambda t: t[0])
+    placed: list[tuple[int, str]] = []
+    last_end = -2
+    for desired_start, token in raw_tokens:
+        min_start = last_end + 2
+        start = max(desired_start, min_start)
+        placed.append((start, token))
+        last_end = start + len(token) - 1
+    max_len = max(start + len(tok) for start, tok in placed)
     chars: list[str] = [' '] * max_len
-    for position, token in tokens:
+    for start, token in placed:
         for offset, character in enumerate(token):
-            target_index = position + offset
+            target_index = start + offset
             if target_index >= len(chars):
                 chars.extend([' '] * (target_index + 1 - len(chars)))
             chars[target_index] = character
