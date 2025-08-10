@@ -137,6 +137,57 @@
         window.addEventListener('scroll', onScroll, {passive:true});
         window.addEventListener('orientationchange', ()=>{ computeTopbar(); refreshIcons(); }, {passive:true});
         window.addEventListener('resize', ()=>{ computeTopbar(); refreshIcons(); }, {passive:true});
+
+        function parseSParam(raw){
+          if(!raw) return [];
+          return raw.split(',').map(t=>t.trim()).filter(Boolean).map(token=>{
+            const [id, key] = token.split(':');
+            return {id, key: key || ''};
+          });
+        }
+        function buildSParam(items){
+          return items.map(it=> it.key ? `${it.id}:${it.key}` : `${it.id}:`).join(',');
+        }
+        const NOTE_ORDER_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+        const FLAT_TO_SHARP = { 'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#' };
+        function normalizeRoot(note){ return FLAT_TO_SHARP[note] || note; }
+        function parseKeyToken(key){
+          if(!key) return {root:'', minor:false};
+          const m = key.match(/^([A-G](?:#|b)?)(m)?$/);
+          if(!m) return {root:'', minor:false};
+          return {root: normalizeRoot(m[1]), minor: !!m[2]};
+        }
+        function stepKey(key, dir){
+          const {root, minor} = parseKeyToken(key);
+          if(!root){ return key; }
+          const idx = NOTE_ORDER_SHARP.indexOf(root);
+          if(idx < 0) return key;
+          const next = (idx + (dir === 'up' ? 1 : -1) + 12) % 12;
+          return NOTE_ORDER_SHARP[next] + (minor ? 'm' : '');
+        }
+        function onTransposeClick(ev){
+          const btn = ev.currentTarget;
+          const wrap = btn.closest('.song-key');
+          if(!wrap) return;
+          const songId = wrap.getAttribute('data-song-id');
+          const effectiveKey = wrap.getAttribute('data-effective-key') || wrap.getAttribute('data-default-key') || '';
+          const dir = btn.getAttribute('data-dir');
+          const qs2 = new URLSearchParams(window.location.search);
+          const items = parseSParam(qs2.get('s') || '');
+          const updated = items.map(it => {
+            if(it.id === songId){
+              const cur = it.key || effectiveKey;
+              const next = stepKey(cur, dir);
+              return {id: it.id, key: next};
+            }
+            return it;
+          });
+          qs2.set('s', buildSParam(updated));
+          window.location.search = qs2.toString();
+        }
+        document.querySelectorAll('.transpose-btn').forEach(btn=>{
+          btn.addEventListener('click', onTransposeClick, {passive:true});
+        });
       })();
     </script>
   </body>

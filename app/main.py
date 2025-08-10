@@ -137,11 +137,27 @@ async def render_setlist(
         if artist:
             left_stack_parts.append(f'<div class="song-sub artist">{artist}</div>')
         left_stack = '<div class="song-stack">' + ''.join(left_stack_parts) + '</div>'
-        key_html = (
-            f'<div class="song-key">Key: {eff_key}</div>'
-            if eff_key
-            else '<div class="song-key">&nbsp;</div>'
+        default_key_str = str(row.get('default_key') or '')
+        eff_key_str = str(eff_key or '')
+        key_base_attrs = (
+            f'data-song-id="{song_id}" '
+            f'data-default-key="{default_key_str}" '
+            f'data-effective-key="{eff_key_str}"'
         )
+        up_btn = (
+            '<button type="button" class="icon-btn key-btn transpose-btn" '
+            'data-dir="up" aria-label="Transpose up" title="Transpose up">'
+            '<span class="icon icon-chev-up" aria-hidden="true"></span>'
+            '</button>'
+        )
+        down_btn = (
+            '<button type="button" class="icon-btn key-btn transpose-btn" '
+            'data-dir="down" aria-label="Transpose down" title="Transpose down">'
+            '<span class="icon icon-chev-down" aria-hidden="true"></span>'
+            '</button>'
+        )
+        key_label = f'<div class="key-label">Key: {eff_key or "&nbsp;"}</div>'
+        key_html = f'<div class="song-key" {key_base_attrs}>{up_btn}{key_label}{down_btn}</div>'
         header = (
             '<header class="song-header">'
             f'{left_stack}'

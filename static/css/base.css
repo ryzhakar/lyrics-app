@@ -70,7 +70,12 @@ main.container { max-width: 820px; padding: var(--topbar-gap) 16px 64px; }
 .song-header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
 .song-stack { display: grid; gap: 2px; align-content: center; }
 .song-sub { color: var(--muted); font-size: 12px; }
-.song-key { justify-self: center; text-align: center; font-weight: 400; font-size: 12px; color: var(--muted); min-width: 96px; }
+.song-key { justify-self: center; text-align: center; font-weight: 400; font-size: 12px; color: var(--muted); min-width: 96px; display: grid; grid-template-rows: auto auto auto; align-items: center; justify-items: center; gap: 0; }
+.song-key .key-label { line-height: 1; padding: 0; }
+.song-key .key-btn { padding: 4px; }
+.song-key .icon { width: 16px; height: 16px; display: inline-block; background: currentColor; }
+.song-key .icon-chev-up { -webkit-mask: url('https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/chevron-up.svg') no-repeat center / contain; mask: url('https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/chevron-up.svg') no-repeat center / contain; }
+.song-key .icon-chev-down { -webkit-mask: url('https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/chevron-down.svg') no-repeat center / contain; mask: url('https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/chevron-down.svg') no-repeat center / contain; }
 
 .song-title {
   font-family: var(--lyrics);
