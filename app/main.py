@@ -18,7 +18,7 @@ from .admin import setup_admin
 from .db import get_connection
 from .middleware import SecurityHeadersMiddleware
 from .parser import parse_chordpro
-from .renderer import render_parsed_song
+from .renderer import render_parsed_song, render_stream_links
 from .repositories.songs import get_song_by_id, list_recent_songs, search_songs
 from .settings import settings
 from .transposer import (
@@ -127,23 +127,10 @@ async def render_setlist(
         original = str(row.get('original_title') or '')
         # Center key (effective key after transpose)
         eff_key = target_key or row.get('default_key')
-        # streaming links
-        yt = str(row.get('youtube_url') or '')
-        sl = str(row.get('songlink_url') or '')
-        links: list[str] = []
-        if yt:
-            links.append(
-                '<a class="icon-link youtube" href="'
-                + yt
-                + '" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>',
-            )
-        if sl:
-            links.append(
-                '<a class="icon-link spotify" href="'
-                + sl
-                + '" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>',
-            )
-        links_html = ''.join(links)
+        links_html = render_stream_links(
+            str(row.get('youtube_url') or '') or None,
+            str(row.get('songlink_url') or '') or None,
+        )
         left_stack_parts = [f'<div class="song-title">{title}</div>']
         if original:
             left_stack_parts.append(f'<div class="song-sub original">{original}</div>')

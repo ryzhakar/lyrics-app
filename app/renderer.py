@@ -54,3 +54,23 @@ def render_parsed_song(parsed: ParsedSong, show_chords: bool) -> str:
             parts.append('<pre class="lyrics">' + lyric_line + '</pre>')
         parts.append('</section>')
     return ''.join(parts)
+
+
+def render_stream_links(youtube_url: str | None, songlink_url: str | None) -> str:
+    """Render external streaming links as icon anchors."""
+    links: list[str] = []
+    if youtube_url:
+        safe = escape(youtube_url, quote=True)
+        links.append(
+            '<a class="icon-link youtube" href="'
+            + safe
+            + '" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>',
+        )
+    if songlink_url:
+        safe = escape(songlink_url, quote=True)
+        links.append(
+            '<a class="icon-link spotify" href="'
+            + safe
+            + '" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>',
+        )
+    return ''.join(links)
