@@ -2,16 +2,24 @@
 {% block content %}
   <div class="results">
     {% for s in results %}
-      <a class="result-card" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
-        <div class="song-title">{{ s.translated_title }}</div>
-        <div class="song-meta">
-          {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
-          {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
-          {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
-          {% if s.youtube_url %}<span class="dot"></span><span class="icon-link youtube" aria-hidden="true"></span>{% endif %}
-          {% if s.songlink_url %}<span class="icon-link spotify" aria-hidden="true"></span>{% endif %}
+      <div class="result-row">
+        <a class="result-main" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
+          <div class="song-title">{{ s.translated_title }}</div>
+          <div class="song-meta">
+            {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
+            {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
+            {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
+          </div>
+        </a>
+        <div class="result-actions">
+          {% if s.youtube_url %}
+            <a class="icon-link youtube" href="{{ s.youtube_url }}" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>
+          {% endif %}
+          {% if s.songlink_url %}
+            <a class="icon-link spotify" href="{{ s.songlink_url }}" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>
+          {% endif %}
         </div>
-      </a>
+      </div>
     {% endfor %}
   </div>
 {% endblock %}

@@ -125,19 +125,8 @@ async def render_setlist(
         title = str(row.get('translated_title'))
         artist = str(row.get('artist') or '')
         original = str(row.get('original_title') or '')
-        meta_parts: list[str] = []
-        if artist:
-            meta_parts.append(f'<span class="meta-item artist">{artist}</span>')
-        if original:
-            meta_parts.append(f'<span class="meta-item original">{original}</span>')
-        # Display the effective (possibly transposed) key if target provided
+        # Center key (effective key after transpose)
         eff_key = target_key or row.get('default_key')
-        if eff_key:
-            meta_parts.append(f'<span class="meta-item key">Key: {eff_key}</span>')
-        meta_html = ''
-        if meta_parts:
-            sep = '<span class="dot"></span>'
-            meta_html = f'<div class="song-meta">{sep.join(meta_parts)}</div>'
         # streaming links
         yt = str(row.get('youtube_url') or '')
         sl = str(row.get('songlink_url') or '')
@@ -155,10 +144,21 @@ async def render_setlist(
                 + '" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>',
             )
         links_html = ''.join(links)
+        left_stack_parts = [f'<div class="song-title">{title}</div>']
+        if original:
+            left_stack_parts.append(f'<div class="song-sub original">{original}</div>')
+        if artist:
+            left_stack_parts.append(f'<div class="song-sub artist">{artist}</div>')
+        left_stack = '<div class="song-stack">' + ''.join(left_stack_parts) + '</div>'
+        key_html = (
+            f'<div class="song-key">Key: {eff_key}</div>'
+            if eff_key
+            else '<div class="song-key">&nbsp;</div>'
+        )
         header = (
             '<header class="song-header">'
-            f'<div class="song-title">{title}</div>'
-            f'{meta_html}'
+            f'{left_stack}'
+            f'{key_html}'
             f'<div class="song-links">{links_html}</div>'
             '</header>'
         )
