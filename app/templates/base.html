@@ -17,15 +17,9 @@
           <input type="search" name="q" placeholder="Search…" value="{{ query or '' }}" />
         </form>
         <div class="actions">
-          <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
-          </button>
-          <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords">
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M4 12s4-7 8-7 8 7 8 7-4 7-8 7-8-7-8-7Zm8-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg>
-          </button>
-          <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link">
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M15 8a3 3 0 1 0-3-3v7l-4 2a3 3 0 1 0 .9 1.79L12 14l0-9"/></svg>
-          </button>
+          <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/moon.svg" width="22" height="22" alt=""></button>
+          <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords"><img id="chords-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/music.svg" width="22" height="22" alt=""></button>
+          <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link"><img id="share-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/share-2.svg" width="22" height="22" alt=""></button>
         </div>
       </div>
     </nav>
@@ -36,15 +30,44 @@
     <script>
       (function(){
         const qs = new URLSearchParams(window.location.search);
-        const s = qs.get('s') || '';
+         const s = qs.get('s') || '';
         const font = qs.get('font') || '';
         const dark = qs.get('dark');
         const chords = qs.get('chords');
+        const root = document.documentElement;
+        const topbar = document.querySelector('.topbar');
+        let lastScrollY = window.scrollY;
+        let targetOffset = 0;
+        function computeTopbar(){
+          const h = topbar.getBoundingClientRect().height;
+          root.style.setProperty('--topbar-h', `${h}px`);
+          root.style.setProperty('--topbar-gap', `${Math.max(0, h - targetOffset)}px`);
+        }
+        function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+        function onScroll(){
+          const y = window.scrollY;
+          const delta = y - lastScrollY;
+          lastScrollY = y;
+          const maxHide = topbar.getBoundingClientRect().height;
+          targetOffset = clamp(targetOffset + delta, 0, maxHide);
+          topbar.style.transform = `translateY(${-targetOffset}px)`;
+          root.style.setProperty('--topbar-gap', `${Math.max(0, maxHide - targetOffset)}px`);
+        }
+        computeTopbar();
+        if(window.ResizeObserver){ new ResizeObserver(computeTopbar).observe(topbar); }
         function setParam(name, value){
           const q = new URLSearchParams(window.location.search);
           if(value === null){ q.delete(name); } else { q.set(name, value); }
           window.location.search = q.toString();
         }
+        function refreshIcons(){
+          const darkOn = (new URLSearchParams(window.location.search).get('dark')||'0') === '1' || document.body.classList.contains('dark');
+          const chordsOn = (new URLSearchParams(window.location.search).get('chords')||'1') === '1';
+          const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/';
+          document.getElementById('theme-icon').src = darkOn ? `${base}sun.svg` : `${base}moon.svg`;
+          document.getElementById('chords-icon').src = chordsOn ? `${base}eyeglass.svg` : `${base}eyeglass-off.svg`;
+        }
+        refreshIcons();
         document.getElementById('theme-toggle').addEventListener('click', function(){
           const cur = (qs.get('dark')||'0') === '1';
           setParam('dark', cur ? '0' : '1');
@@ -62,19 +85,23 @@
         document.getElementById('share-link').addEventListener('click', async function(){
           const url = window.location.href;
           try{
-            if(navigator.share){ await navigator.share({url}); return; }
-            await navigator.clipboard.writeText(url);
-            showToast('Link copied');
+            if(navigator.share){ await navigator.share({url}); showToast('Link shared'); return; }
+            if(navigator.clipboard && window.isSecureContext){
+              await navigator.clipboard.writeText(url);
+              showToast('Link copied');
+              return;
+            }
+            const ta = document.createElement('textarea');
+            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            const ok = document.execCommand('copy'); document.body.removeChild(ta);
+            showToast(ok ? 'Link copied' : 'Open share sheet');
           }catch{ showToast('Could not share'); }
         });
-        // Auto-hide topbar on scroll
-        let lastY = window.scrollY; let hidden = false;
-        window.addEventListener('scroll', () => {
-          const y = window.scrollY;
-          if(y > lastY + 16 && !hidden){ document.querySelector('.topbar').classList.add('hide'); hidden = true; }
-          else if(y < lastY - 16 && hidden){ document.querySelector('.topbar').classList.remove('hide'); hidden = false; }
-          lastY = y;
-        }, {passive:true});
+        // Detent-style topbar hide/reveal without breaking sticky offsets
+        window.addEventListener('scroll', onScroll, {passive:true});
+        window.addEventListener('orientationchange', ()=>{ computeTopbar(); refreshIcons(); }, {passive:true});
+        window.addEventListener('resize', ()=>{ computeTopbar(); refreshIcons(); }, {passive:true});
       })();
     </script>
   </body>

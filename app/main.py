@@ -124,9 +124,12 @@ async def render_setlist(
         html = render_parsed_song(parsed, show_chords=bool(chords))
         title = str(row.get('translated_title'))
         artist = str(row.get('artist') or '')
+        original = str(row.get('original_title') or '')
         meta_parts: list[str] = []
         if artist:
             meta_parts.append(f'<span class="meta-item artist">{artist}</span>')
+        if original:
+            meta_parts.append(f'<span class="meta-item original">{original}</span>')
         # Display the effective (possibly transposed) key if target provided
         eff_key = target_key or row.get('default_key')
         if eff_key:
@@ -141,10 +144,8 @@ async def render_setlist(
         links: list[str] = []
         if yt:
             yt_icon = (
-                '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">'
-                '<path fill="currentColor" '
-                'd="M10 15l5.19-3L10 9v6Zm11-3a9 9 0 1 1-9-9 9 9 0 0 1 9 9Z"/>'
-                '</svg>'
+                '<img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/'
+                'brand-youtube.svg" width="18" height="18" alt="">'
             )
             links.append(
                 '<a class="icon-link" href="'
@@ -155,10 +156,8 @@ async def render_setlist(
             )
         if sl:
             cd_icon = (
-                '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">'
-                '<path fill="currentColor" '
-                'd="M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm1 5 3 3-5 5H8v-3l5-5Z"/>'
-                '</svg>'
+                '<img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/'
+                'brand-spotify.svg" width="18" height="18" alt="">'
             )
             links.append(
                 '<a class="icon-link" href="'
@@ -169,8 +168,11 @@ async def render_setlist(
             )
         links_html = ''.join(links)
         header = (
-            f'<header class="song-header"><div class="song-title">{title}</div>{meta_html}'
-            f'<div class="song-links">{links_html}</div></header>'
+            '<header class="song-header">'
+            f'<div class="song-title">{title}</div>'
+            f'{meta_html}'
+            f'<div class="song-links">{links_html}</div>'
+            '</header>'
         )
         article = f'<article class="song">{header}{html}</article>'
         blocks.append(article)
