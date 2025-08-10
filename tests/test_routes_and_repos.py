@@ -27,6 +27,41 @@ async def test_health_endpoint(client: Any) -> None:
 
 
 @pytest.mark.asyncio
+async def test_search_ordering_prioritizes_title_prefix(client: Any) -> None:
+    from sqlalchemy.ext.asyncio import AsyncConnection
+    from app.db import engine
+
+    async with engine.begin() as db_conn:  # type: ignore[assignment]
+        assert isinstance(db_conn, AsyncConnection)
+        await db_conn.execute(
+            insert(songs).values(
+                translated_title='Amazing Grace',
+                artist='John Newton',
+                chordpro_content='[C]Amazing',
+                default_key='C',
+                is_draft=False,
+            ),
+        )
+        await db_conn.execute(
+            insert(songs).values(
+                translated_title='Grace Song',
+                artist='Amazing Artist',
+                chordpro_content='lyrics amazing',
+                default_key='C',
+                is_draft=False,
+            ),
+        )
+
+    r = await client.get('/search?q=Amazing')
+    assert r.status_code == 200
+    body = r.text
+    first_idx = body.find('Amazing Grace')
+    second_idx = body.find('Grace Song')
+    assert first_idx != -1 and second_idx != -1
+    assert first_idx < second_idx
+
+
+@pytest.mark.asyncio
 async def test_search_and_list_exclude_drafts(client: Any) -> None:
     from sqlalchemy.ext.asyncio import AsyncConnection
     from app.db import engine
@@ -94,6 +129,8 @@ async def test_setlist_route_renders_and_applies_flags(client: Any) -> None:
     assert '<article class="song">' in html
     assert '<pre class="chords">' not in html
     assert 'song-container' in html
+    # dark mode class is applied
+    assert ' class="dark ' in html
 
 
 @pytest.mark.asyncio

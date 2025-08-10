@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import and_, insert, literal, or_, select
+from sqlalchemy import and_, case, insert, literal, or_, select
 
 from app.db import songs
 
@@ -47,6 +47,7 @@ async def search_songs(
 ) -> list[dict[str, Any]]:
     """Search songs by ILIKE."""
     q = f'%{query}%'
+    qp = f'{query}%'
     conditions = [
         or_(
             songs.c.translated_title.ilike(q),
@@ -56,8 +57,26 @@ async def search_songs(
     ]
     if not include_drafts:
         conditions.append(songs.c.is_draft.is_(False))
-    stmt = (select(songs).where(and_(*conditions)).order_by(literal(1).label('priority'))).limit(
-        limit,
+    priority = case(
+        (
+            songs.c.translated_title.ilike(qp),
+            literal(1),
+        ),
+        (
+            songs.c.translated_title.ilike(q),
+            literal(2),
+        ),
+        (
+            songs.c.artist.ilike(q),
+            literal(3),
+        ),
+        else_=literal(4),
+    ).label('priority')
+    stmt = (
+        select(songs, priority)
+        .where(and_(*conditions))
+        .order_by(priority.asc(), songs.c.created_at.desc())
+        .limit(limit)
     )
     res: Result = await conn.execute(stmt)
-    return [dict(m) for m in res.mappings().all()]
+    return [{k: v for k, v in dict(m).items() if k in songs.c} for m in res.mappings().all()]

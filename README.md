@@ -4,14 +4,15 @@
 
 ```
 uv venv
-uv pip install -r requirements.txt
-uv pip install '.[dev]'
+source .venv/bin/activate
+uv sync --extra dev --frozen
 ```
 
 2. Start Postgres and run migrations
 
 ```
 docker compose up -d db
+export DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/lyrics_app
 alembic upgrade head
 ```
 
@@ -25,7 +26,15 @@ This will create `.env` with `SECRET_KEY`, `DATABASE_URL` and admin bootstrap cr
 4. Run the app
 
 ```
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
+```
+
+5. Pre-commit hooks
+
+```
+uv run pre-commit install
+git add -A
+pre-commit run --all-files
 ```
 
 ## Env
