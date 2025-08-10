@@ -1,0 +1,12 @@
+{% extends "sqladmin/create.html" %}
+{% block content %}
+  {{ super() }}
+  <style>
+    @media (max-width: 768px) {
+      .card { border-radius: 0 !important; }
+      .page-body, .content { padding-left: .5rem !important; padding-right: .5rem !important; }
+      .btn { font-size: 1rem; }
+      input[type=password] { font-size: 1rem; }
+    }
+  </style>
+{% endblock %}

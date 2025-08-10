@@ -20,7 +20,7 @@ from .transposer import NOTE_TO_SEMITONE
 class SongAdmin(ModelView, model=SongModel):
     """Configure admin for songs."""
 
-    category = 'Content'
+    category = ''
     icon = 'fa-solid fa-music'
     column_list: ClassVar[list[str]] = ['id', 'translated_title', 'artist', 'is_draft']
     form_columns: ClassVar[list[str]] = [
@@ -62,11 +62,14 @@ class SongAdmin(ModelView, model=SongModel):
 class AdminUserAdmin(ModelView, model=AdminUserModel):
     """Configure admin for users."""
 
-    category = 'Users'
+    category = ''
     icon = 'fa-solid fa-user'
+    page_size: ClassVar[int] = 20
     column_list: ClassVar[list[str]] = ['id', 'email']
-    form_columns: ClassVar[list[str]] = ['email', 'password']
-    form_extra_fields: ClassVar[dict[str, Any]] = {'password': PasswordField('Password')}
+    form_excluded_columns: ClassVar[list[str]] = ['password_hash', 'created_at', 'updated_at']
+    form_extra_fields: ClassVar[dict[str, Any]] = {
+        'password': PasswordField('Password', render_kw={'autocomplete': 'new-password'}),
+    }
     can_create: ClassVar[bool] = True
     can_edit: ClassVar[bool] = True
     can_delete: ClassVar[bool] = True
@@ -80,13 +83,14 @@ class AdminUserAdmin(ModelView, model=AdminUserModel):
     ) -> None:
         """Hash password field on create/update and never persist raw value."""
         _ = (request,)
-        raw_pw = data.get('password') if 'password' in data else None
+        raw_pw = data.get('password') if data and 'password' in data else None
         if is_created and not raw_pw:
             raise ValueError('password is required')
         if raw_pw:
             hashed = bcrypt.hashpw(str(raw_pw).encode(), bcrypt.gensalt()).decode()
             data['password_hash'] = hashed
-        data.pop('password', None)
+        if data and 'password' in data:
+            data.pop('password')
 
 
 def _sync_db_url(url: str) -> str:
@@ -106,6 +110,7 @@ def setup_admin(app: Any) -> Admin:
         engine=sync_engine,
         authentication_backend=AdminAuth(settings.secret_key),
     )
+    # Add song list as first view so admin loads with songs by default
     admin.add_view(SongAdmin)
     admin.add_view(AdminUserAdmin)
     return admin

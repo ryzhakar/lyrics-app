@@ -23,7 +23,7 @@ class SongModel:
     translated_title: ClassVar[str]
     artist: ClassVar[str | None]
     chordpro_content: ClassVar[str]
-    default_key: ClassVar[str | None]
+    default_key: ClassVar[str]
     youtube_url: ClassVar[str | None]
     songlink_url: ClassVar[str | None]
     is_draft: ClassVar[bool]

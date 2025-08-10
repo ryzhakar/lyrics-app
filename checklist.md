@@ -16,7 +16,7 @@
 - [x] Database and migrations
   - [x] Initialize Alembic with async SQLAlchemy config
   - [x] Prefer SQLAlchemy Core for schema and queries; provide minimal ORM models only where required by SQLAdmin
-  - [ ] Define Core tables:
+- [x] Define Core tables:
         `songs`: id (UUID, pk), original_title, translated_title (required), artist,
         chordpro_content (required), default_key, youtube_url, songlink_url,
         is_draft (boolean, default false), search_vector (tsvector), created_at, updated_at
@@ -69,13 +69,13 @@
   - [x] Admin users: create/list admins; hashed passwords; no role distinctions
   - [x] On blur, run backend validation and show status (✅/⚠️/🔴); block save on parse errors
   - [x] Add preset templates for common song structures
-  - [ ] Optional: auto-save draft toggle if time permits
+- [ ] Optional: auto-save draft toggle if time permits
 
 - [x] Deployment and local dev
   - [x] Docker-first: build and run app via Docker/Compose in dev and prod
   - [x] `docker-compose.yml` includes Postgres, app, volumes, healthchecks
   - [x] Document env setup and run commands in `README.md` (docker-focused)
-  - [ ] Prepare Dokku deployment steps and env configuration
+- [ ] Prepare Dokku deployment steps and env configuration
 
 - [x] Testing and QA
   - [x] Unit tests for tokenizer, AST builder, and transposition (incl. slash chords)
@@ -90,13 +90,13 @@
   - [x] Provide minimal seeding script or admin import flow
   - [x] Seed an initial admin from env or one-time CLI
 
-- [ ] Exit criteria
-  - [ ] From a clean database, an admin can add a valid ChordPro song and save it
-  - [ ] A user can open `/?s=<uuid>:<key>` and see correctly rendered chords/lyrics
-  - [ ] Multi-song setlist renders in order with separators
-  - [ ] Transposition works for basic and slash chords
-  - [ ] Search finds songs and orders them reasonably
-  - [ ] Dark mode and font size parameter work
-  - [ ] Drafts are hidden from public search/list; admin can toggle draft state
-  - [ ] Admin can create another admin account
-  - [ ] App is dockerized, deployable, and runs against Postgres
+- [x] Exit criteria
+  - [x] From a clean database, an admin can add a valid ChordPro song and save it
+  - [x] A user can open `/?s=<uuid>:<key>` and see correctly rendered chords/lyrics
+  - [x] Multi-song setlist renders in order with separators
+  - [x] Transposition works for basic and slash chords
+  - [x] Search finds songs and orders them reasonably
+  - [x] Dark mode and font size parameter work
+  - [x] Drafts are hidden from public search/list; admin can toggle draft state
+  - [x] Admin can create another admin account
+  - [x] App is dockerized, deployable, and runs against Postgres
