@@ -212,18 +212,30 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .is-hidden { display: none !important; }
 
 /* setlist selection UI */
-.selected-panel { display: grid; gap: var(--space-1); margin-bottom: var(--space-3); border-bottom: 1px solid var(--separator); padding-bottom: var(--space-3); }
+.selected-panel { display: grid; gap: var(--space-1); margin-bottom: var(--space-2); border-bottom: 1px solid var(--separator); padding-bottom: var(--space-2); }
 .selected-header { display: grid; grid-template-columns: 1fr auto; align-items: baseline; }
 .selected-title { font-weight: 600; font-size: 13px; color: var(--muted); }
 .selected-actions { display: flex; gap: var(--space-4); }
 .selected-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); counter-reset: sel; }
-.selected-item { counter-increment: sel; display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-radius: 0; }
-.selected-item::before { content: counter(sel); width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 6px; background: var(--accent); color: var(--bg); font-size: 11px; }
+.selected-item { counter-increment: sel; display: grid; grid-template-columns: 24px 1fr auto auto auto; align-items: center; gap: var(--space-2); padding: 0; border-radius: 0; min-height: 44px; }
+.selected-item::before { content: counter(sel); width: 24px; height: 24px; line-height: 24px; text-align: center; border-radius: 8px; background: var(--accent); color: var(--bg); font-size: 12px; }
 .selected-controls { display: inline-flex; gap: var(--space-2); }
 .drag-handle { width: 28px; height: 28px; cursor: grab; color: var(--muted); }
 .drag-handle:active { cursor: grabbing; }
-.selected-item .song-key { min-width: 96px; display: inline-grid; grid-auto-flow: column; grid-auto-columns: max-content; gap: 6px; align-items: center; }
-.selected-item .song-key .key-label { margin: 0; }
+.selected-item .song-key {
+  min-width: 96px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  text-align: left;
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: end;
+}
+.selected-item .song-key .key-label { margin: 0; line-height: 1; }
+.selected-item .song-key .key-btn { padding: 6px; }
+.selected-item .song-stack { min-width: 0; }
 
 /* do not recolor the entire row on selection; only the plus button changes */
 .result-row.selected { outline: none; }

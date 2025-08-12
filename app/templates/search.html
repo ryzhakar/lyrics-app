@@ -97,6 +97,10 @@
           const defKey = (meta[it.id] && meta[it.id].default_key) || '';
           const stack = document.createElement('div');
           stack.className = 'song-stack';
+          stack.style.display = 'grid';
+          stack.style.gridAutoFlow = 'column';
+          stack.style.alignItems = 'center';
+          stack.style.gap = '8px';
           const titleEl = document.createElement('div');
           titleEl.className = 'song-title';
           titleEl.textContent = title;
