@@ -67,7 +67,22 @@
         function showToast(text){ const el = document.getElementById('toast'); el.textContent = text; el.setAttribute('aria-hidden','false'); el.classList.add('show'); setTimeout(()=>{ el.classList.remove('show'); el.setAttribute('aria-hidden','true');}, 1600); }
         function readMeta(){ try{ return JSON.parse(sessionStorage.getItem('setlistMeta') || '{}'); }catch{ return {}; } }
         function gatherTitlesFromPage(){ const map = {}; document.querySelectorAll('.song-header').forEach(header=>{ const wrap = header.querySelector('.song-key'); const titleEl = header.querySelector('.song-title'); if(!wrap || !titleEl) return; const id = wrap.getAttribute('data-song-id'); if(id){ map[id] = titleEl.textContent.trim(); } }); return map; }
-        function buildShareText(){ const items = parseSParam(new URLSearchParams(window.location.search).get('s') || ''); const meta = readMeta(); const pageTitles = gatherTitlesFromPage(); const lines = []; items.forEach((it, idx)=>{ const title = (meta[it.id] && meta[it.id].title) || pageTitles[it.id] || it.id; const key = it.key || ''; const withKey = key ? ` — ${key}` : ''; lines.push(`${idx+1}. ${title}${withKey}`); }); const url = window.location.href; return (lines.length ? lines.join('\n') + `\n\n${url}` : url); }
+        function buildShareText(){
+          const qsNow = new URLSearchParams(window.location.search);
+          const chordsOn = (qsNow.get('chords')||'1') === '1';
+          const items = parseSParam(qsNow.get('s') || '');
+          const url = window.location.href;
+          if(items.length <= 1){ return url; }
+          const meta = readMeta();
+          const pageTitles = gatherTitlesFromPage();
+          const lines = [];
+          items.forEach((it, idx)=>{
+            const title = (meta[it.id] && meta[it.id].title) || pageTitles[it.id] || it.id;
+            const key = (chordsOn && it.key) ? ` — ${it.key}` : '';
+            lines.push(`${idx+1}. ${title}${key}`);
+          });
+          return lines.join('\n') + `\n\n${url}`;
+        }
         document.getElementById('share-link').addEventListener('click', async function(){ const text = buildShareText(); try{ if(navigator.share){ await navigator.share({ text }); showToast('Link shared'); return; } if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); showToast('Link copied'); return; } const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta); showToast(ok ? 'Link copied' : 'Open share sheet'); }catch{ showToast('Could not share'); }});
         const actions = document.querySelector('.actions');
         if(actions && window.location.pathname !== '/search'){
