@@ -175,7 +175,7 @@ async def render_setlist(
             f'<div class="song-links">{links_html}</div>'
             '</header>'
         )
-        article = f'<article class="song">{header}{html}</article>'
+        article = f'<article class="song">{header}<div class="song-body">{html}</div></article>'
         blocks.append(article)
     return templates.TemplateResponse(
         request,
