@@ -4,7 +4,7 @@ from html import escape
 
 from .parser import LineBlock, ParsedSong
 
-WRAP_WIDTH = 60
+WRAP_WIDTH = 40
 
 
 def build_chord_line(line: LineBlock, show_chords: bool) -> str:
@@ -50,12 +50,16 @@ def wrap_line_blocks(line: LineBlock, width: int) -> list[LineBlock]:
         hard_end = min(start + width, len(lyrics))
         end = hard_end
         if end < len(lyrics):
-            space = lyrics.rfind(' ', start + 1, end)
-            if space != -1 and space > start:
-                end = space
+            for i in range(end, start, -1):
+                ch = lyrics[i - 1]
+                if ch.isspace() or ch == '-':
+                    end = i
+                    break
+        if end <= start:
+            end = hard_end
         sub_lyrics = lyrics[start:end].rstrip()
         next_start = end
-        while next_start < len(lyrics) and lyrics[next_start] == ' ':
+        while next_start < len(lyrics) and lyrics[next_start].isspace():
             next_start += 1
         sub_chords: list[str | None] = []
         sub_positions: list[int] = []
