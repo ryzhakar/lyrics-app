@@ -14,9 +14,7 @@
       <div class="topbar-row">
         <a href="/" class="brand" aria-label="Home">Lyrics</a>
         {% if is_search %}
-        <form action="/search" method="get" class="search">
-          <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
-        </form>
+        <div class="bar-spacer"></div>
         {% else %}
         <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/search.svg" width="22" height="22" alt=""></a>
         {% endif %}

@@ -1,12 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-  <div id="search-hero" class="search-hero" aria-hidden="true">
-    <div class="hero-center">
-      <form action="/search" method="get" class="search search-large">
-        <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
-      </form>
-      <div class="hero-hint">Start typing to find songs. Add with the plus, tap title to open.</div>
-    </div>
+  <div class="search-header">
+    <form action="/search" method="get" class="search search-large">
+      <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
+    </form>
   </div>
 
   <div class="selected-panel is-hidden" id="selected-panel" aria-live="polite">
