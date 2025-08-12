@@ -156,14 +156,9 @@
       const sel = document.getElementById('sel-list');
       let dragIndex = -1;
       function indexOfLi(node){ return Array.from(sel.children).indexOf(node); }
-      sel.addEventListener('dragstart', (e)=>{
-        const li = e.target.closest('li.selected-item'); if(!li) return; dragIndex = indexOfLi(li); e.dataTransfer.effectAllowed = 'move';
-      });
+      sel.addEventListener('dragstart', (e)=>{ const li = e.target.closest('li.selected-item'); if(!li) return; dragIndex = indexOfLi(li); e.dataTransfer.effectAllowed = 'move'; });
       sel.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-      sel.addEventListener('drop', (e)=>{
-        e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return;
-        const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; render();
-      });
+      sel.addEventListener('drop', (e)=>{ e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return; const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; render(); });
       sel.addEventListener('dragend', ()=>{ dragIndex = -1; });
 
       const openBtn = document.getElementById('open-setlist');
