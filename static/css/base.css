@@ -222,23 +222,15 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .selected-title { font-weight: 600; font-size: 13px; color: var(--muted); }
 .selected-actions { display: flex; gap: var(--space-4); }
 .selected-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.selected-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-3); padding: 0; border-radius: 0; min-height: 44px; }
+.selected-item { display: grid; grid-template-columns: 1fr 96px auto; align-items: center; gap: var(--space-3); padding: 0; border-radius: 0; min-height: 44px; }
 .selected-controls { display: inline-flex; gap: var(--space-2); }
 .drag-handle { width: 32px; height: 32px; cursor: grab; color: var(--muted); font-size: 18px; display: inline-grid; place-items: center; }
 .drag-handle:active { cursor: grabbing; }
 .selected-item.drag-hide { display: none; }
 .drop-placeholder { height: 44px; border-radius: 8px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
-.selected-item .sel-key {
-  min-width: 88px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0;
-  text-align: left;
-  grid-column: auto;
-  grid-row: auto;
-  justify-self: end;
-}
-.selected-item .sel-key .key-label { margin: 0; line-height: 1; white-space: nowrap; }
+.selected-item .sel-stack { min-width: 0; display: grid; gap: var(--space-1); }
+.selected-item .sel-key { position: relative; width: 96px; display: inline-flex; align-items: center; justify-content: center; padding: 0; text-align: center; grid-column: auto; grid-row: auto; }
+.selected-item .sel-key .key-label { margin: 0; line-height: 1; white-space: nowrap; color: var(--muted); font-size: 12px; font-weight: 400; cursor: pointer; user-select: none; }
 .selected-item .song-stack { min-width: 0; display: inline-flex; align-items: center; gap: var(--space-2); }
 .selected-item .song-title, .selected-item .song-meta { white-space: nowrap; }
 

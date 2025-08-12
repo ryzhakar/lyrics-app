@@ -257,7 +257,7 @@
       });
 
       document.addEventListener('click', (e)=>{
-        if(!e.target.closest('.selected-list .song-key')){
+        if(!e.target.closest('.selected-list .sel-key')){
           document.querySelectorAll('.selected-list .key-popover').forEach(el=>el.remove());
         }
       }, {capture:true, passive:true});
