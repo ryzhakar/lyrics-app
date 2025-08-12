@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from html import escape
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:  # pragma: no cover
-    from .parser import LineBlock, ParsedSong
+from .parser import LineBlock, ParsedSong
+
+WRAP_WIDTH = 60
 
 
 def build_chord_line(line: LineBlock, show_chords: bool) -> str:
@@ -39,6 +39,35 @@ def build_chord_line(line: LineBlock, show_chords: bool) -> str:
     return ''.join(chars)
 
 
+def wrap_line_blocks(line: LineBlock, width: int) -> list[LineBlock]:
+    """Split a line into width-bound blocks while keeping chord indices."""
+    if width <= 0 or len(line.lyrics) <= width:
+        return [line]
+    result: list[LineBlock] = []
+    start = 0
+    lyrics = line.lyrics
+    while start < len(lyrics):
+        hard_end = min(start + width, len(lyrics))
+        end = hard_end
+        if end < len(lyrics):
+            space = lyrics.rfind(' ', start + 1, end)
+            if space != -1 and space > start:
+                end = space
+        sub_lyrics = lyrics[start:end].rstrip()
+        next_start = end
+        while next_start < len(lyrics) and lyrics[next_start] == ' ':
+            next_start += 1
+        sub_chords: list[str | None] = []
+        sub_positions: list[int] = []
+        for token, pos in zip(line.chords, line.chord_positions, strict=False):
+            if start <= pos < next_start:
+                sub_chords.append(token)
+                sub_positions.append(pos - start)
+        result.append(LineBlock(sub_chords, sub_positions, sub_lyrics))
+        start = next_start
+    return result
+
+
 def render_parsed_song(parsed: ParsedSong, show_chords: bool) -> str:
     """Render a parsed song into HTML with monospace alignment."""
     parts: list[str] = []
@@ -47,11 +76,12 @@ def render_parsed_song(parsed: ParsedSong, show_chords: bool) -> str:
         if section.name:
             parts.append(f'<h3 class="section-header">{escape(section.name)}</h3>')
         for line in section.lines:
-            chord_line = build_chord_line(line, show_chords)
-            lyric_line = escape(line.lyrics)
-            if chord_line:
-                parts.append('<pre class="chords">' + escape(chord_line) + '</pre>')
-            parts.append('<pre class="lyrics">' + lyric_line + '</pre>')
+            for sub in wrap_line_blocks(line, WRAP_WIDTH):
+                chord_line = build_chord_line(sub, show_chords)
+                lyric_line = escape(sub.lyrics)
+                if chord_line:
+                    parts.append('<pre class="chords">' + escape(chord_line) + '</pre>')
+                parts.append('<pre class="lyrics">' + lyric_line + '</pre>')
         parts.append('</section>')
     return ''.join(parts)
 
