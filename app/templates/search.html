@@ -85,7 +85,16 @@
       }
 
       function isSelected(id){ return selection.findIndex(it=>it.id===id) !== -1; }
-      function renderPreservingHeader(){ const hdr = document.querySelector('.search-header'); const before = hdr ? hdr.getBoundingClientRect().top : null; render(); if(before !== null && hdr){ const after = hdr.getBoundingClientRect().top; const dy = after - before; if(Math.abs(dy) > 0){ window.scrollBy({top: dy, left: 0, behavior: 'auto'}); } } }
+      function renderPreservingHeader(){
+        const hdr = document.querySelector('.search-header');
+        const beforeDocTop = hdr ? (hdr.getBoundingClientRect().top + window.scrollY) : null;
+        render();
+        if(beforeDocTop !== null && hdr){
+          const afterDocTop = hdr.getBoundingClientRect().top + window.scrollY;
+          const dy = afterDocTop - beforeDocTop;
+          if(dy !== 0){ window.scrollTo({ top: window.scrollY + dy, left: 0, behavior: 'auto' }); }
+        }
+      }
       function addSelection(id, key){ if(isSelected(id)) return; selection.push({id, key}); setURLWithS(selection); renderPreservingHeader(); }
       function removeSelection(id){ selection = selection.filter(it=>it.id!==id); setURLWithS(selection); renderPreservingHeader(); }
       function moveSelection(id, dir){ const idx = selection.findIndex(it=>it.id===id); if(idx === -1) return; const to = dir==='up' ? idx-1 : idx+1; if(to < 0 || to >= selection.length) return; const tmp = selection[idx]; selection[idx] = selection[to]; selection[to] = tmp; setURLWithS(selection); render(); }
