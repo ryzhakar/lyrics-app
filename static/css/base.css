@@ -227,7 +227,8 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .drag-handle { width: 32px; height: 32px; cursor: grab; color: var(--muted); font-size: 18px; display: inline-grid; place-items: center; }
 .drag-handle:active { cursor: grabbing; }
 .selected-item.drag-hide { display: none; }
-.drop-placeholder { height: 44px; border-radius: 8px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.drop-placeholder { height: 44px; border-radius: 8px; background: color-mix(in srgb, var(--fg) 8%, transparent); transition: transform 80ms ease, background-color 120ms ease; }
+.selected-item.drag-hide ~ .drop-placeholder { transform: scaleY(1.02); }
 .selected-item .sel-stack { min-width: 0; display: grid; gap: var(--space-1); }
 .selected-item .sel-key { position: relative; width: 96px; display: inline-flex; align-items: center; justify-content: center; padding: 0; text-align: center; grid-column: auto; grid-row: auto; }
 .selected-item .sel-key .key-label { margin: 0; line-height: 1; white-space: nowrap; color: var(--muted); font-size: 12px; font-weight: 400; cursor: pointer; user-select: none; }
