@@ -217,12 +217,13 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .selected-title { font-weight: 600; font-size: 13px; color: var(--muted); }
 .selected-actions { display: flex; gap: var(--space-4); }
 .selected-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); counter-reset: sel; }
-.selected-item { counter-increment: sel; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-radius: 0; }
+.selected-item { counter-increment: sel; display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-radius: 0; }
 .selected-item::before { content: counter(sel); width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 6px; background: var(--accent); color: var(--bg); font-size: 11px; }
 .selected-controls { display: inline-flex; gap: var(--space-2); }
 .drag-handle { width: 28px; height: 28px; cursor: grab; color: var(--muted); }
 .drag-handle:active { cursor: grabbing; }
-.selected-item .song-key { min-width: 96px; }
+.selected-item .song-key { min-width: 96px; display: inline-grid; grid-auto-flow: column; grid-auto-columns: max-content; gap: 6px; align-items: center; }
+.selected-item .song-key .key-label { margin: 0; }
 
 /* do not recolor the entire row on selection; only the plus button changes */
 .result-row.selected { outline: none; }

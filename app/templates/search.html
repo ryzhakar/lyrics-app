@@ -1,11 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="search-header">
-    <form action="/search" method="get" class="search search-large">
-      <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
-    </form>
-  </div>
-
   <div class="selected-panel is-hidden" id="selected-panel" aria-live="polite">
     <div class="selected-header">
       <div class="selected-title">Selected (<span id="sel-count">0</span>)</div>
@@ -15,6 +9,12 @@
       </div>
     </div>
     <ol class="selected-list" id="sel-list"></ol>
+  </div>
+
+  <div class="search-header">
+    <form action="/search" method="get" class="search search-large">
+      <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
+    </form>
   </div>
 
   <div class="results">
@@ -101,12 +101,7 @@
           titleEl.className = 'song-title';
           titleEl.textContent = title;
           stack.appendChild(titleEl);
-          if (artist) {
-            const metaEl = document.createElement('div');
-            metaEl.className = 'song-meta';
-            const a = document.createElement('span'); a.className = 'meta-item artist'; a.textContent = artist; metaEl.appendChild(a);
-            stack.appendChild(metaEl);
-          }
+          if (artist) { const a = document.createElement('span'); a.className = 'song-meta'; a.textContent = artist; stack.appendChild(a); }
           li.appendChild(stack);
           const keyWrap = document.createElement('div'); keyWrap.className = 'song-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
           const upBtn = document.createElement('button'); upBtn.type = 'button'; upBtn.className = 'icon-btn key-btn transpose-btn'; upBtn.setAttribute('data-dir','up'); upBtn.setAttribute('title','Transpose up'); upBtn.setAttribute('aria-label','Transpose up'); upBtn.innerHTML = '<span class="icon icon-chev-up" aria-hidden="true"></span>';
