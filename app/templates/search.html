@@ -114,10 +114,8 @@
           if (artist) { const a = document.createElement('span'); a.className = 'song-meta'; a.textContent = artist; stack.appendChild(a); }
           li.appendChild(stack);
           const keyWrap = document.createElement('div'); keyWrap.className = 'song-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
-          const upBtn = document.createElement('button'); upBtn.type = 'button'; upBtn.className = 'icon-btn key-btn transpose-btn'; upBtn.setAttribute('data-dir','up'); upBtn.setAttribute('title','Transpose up'); upBtn.setAttribute('aria-label','Transpose up'); upBtn.innerHTML = '<span class="icon icon-chev-up" aria-hidden="true"></span>';
           const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Key: ${it.key || defKey || '\u00A0'}`;
-          const downBtn = document.createElement('button'); downBtn.type = 'button'; downBtn.className = 'icon-btn key-btn transpose-btn'; downBtn.setAttribute('data-dir','down'); downBtn.setAttribute('title','Transpose down'); downBtn.setAttribute('aria-label','Transpose down'); downBtn.innerHTML = '<span class="icon icon-chev-down" aria-hidden="true"></span>';
-          keyWrap.appendChild(upBtn); keyWrap.appendChild(label); keyWrap.appendChild(downBtn);
+          keyWrap.appendChild(label);
           li.appendChild(keyWrap);
           const controls = document.createElement('div'); controls.className = 'selected-controls';
           const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn remove-btn'; rm.textContent = '×'; rm.title = 'Remove'; rm.setAttribute('aria-label','Remove');
@@ -168,23 +166,9 @@
 
       // Delegate key switching and menu inside selected list
       sel.addEventListener('click', (e)=>{
-        const up = e.target.closest('.transpose-btn[data-dir="up"]');
-        const down = e.target.closest('.transpose-btn[data-dir="down"]');
         const label = e.target.closest('.song-key .key-label');
         const opt = e.target.closest('.key-option');
         const li = e.target.closest('li.selected-item');
-        if((up || down) && li){
-          const songKeyWrap = li.querySelector('.song-key'); if(!songKeyWrap) return;
-          const songId = songKeyWrap.getAttribute('data-song-id');
-          const idx = selection.findIndex(it=> it.id === songId); if(idx === -1) return;
-          const current = selection[idx].key || songKeyWrap.getAttribute('data-default-key') || '';
-          const dir = up ? 'up' : 'down';
-          const next = stepKey(current, dir);
-          selection[idx] = {id: selection[idx].id, key: next};
-          setURLWithS(selection);
-          renderPreservingHeader();
-          return;
-        }
         if(label && li){
           e.preventDefault(); e.stopPropagation();
           const wrap = label.closest('.song-key');

@@ -80,6 +80,8 @@ main.container { max-width: var(--measure); margin: 0 auto; padding: calc(var(--
 .song-key .icon-chev-down { -webkit-mask: url('https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/chevron-down.svg') no-repeat center / contain; mask: url('https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/chevron-down.svg') no-repeat center / contain; }
 .song-key { position: relative; }
 .song-key .key-label { cursor: pointer; user-select: none; }
+/* hide transpose chevrons; picker-only selection */
+.song-key .transpose-btn { display: none !important; }
 .key-popover {
   position: absolute;
   top: 100%;
