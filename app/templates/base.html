@@ -14,13 +14,13 @@
       <div class="topbar-row">
         <a href="/" class="brand" aria-label="Home">YGS LYRICS</a>
         <div class="actions">
-          <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/moon.svg" width="22" height="22" alt=""></button>
+          <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" width="22" height="22" alt=""></button>
           {% if not is_search %}
-          <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords"><img id="chords-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/music.svg" width="22" height="22" alt=""></button>
+          <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords"><img id="chords-icon" width="22" height="22" alt=""></button>
           {% endif %}
-          <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link"><img id="share-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/share-2.svg" width="22" height="22" alt=""></button>
+          <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link"><img id="share-icon" width="22" height="22" alt=""></button>
           {% if not is_search %}
-          <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/search.svg" width="22" height="22" alt=""></a>
+          <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img width="22" height="22" alt=""></a>
           {% endif %}
         </div>
       </div>
@@ -45,7 +45,20 @@
           try { window.__showSearchHero = true; history.replaceState(null, '', '/search' + (window.location.search || '')); } catch {}
         }
         function setParam(name, value){ const q = new URLSearchParams(window.location.search); if(value === null){ q.delete(name); } else { q.set(name, value); } window.location.search = q.toString(); }
-        function refreshIcons(){ const darkOn = (new URLSearchParams(window.location.search).get('dark')||'0') === '1' || document.body.classList.contains('dark'); const chordsOn = (new URLSearchParams(window.location.search).get('chords')||'1') === '1'; const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/'; const themeIcon = document.getElementById('theme-icon'); if(themeIcon){ themeIcon.src = darkOn ? `${base}outline/sun.svg` : `${base}outline/moon.svg`; } const chordsIcon = document.getElementById('chords-icon'); if(chordsIcon){ chordsIcon.src = chordsOn ? `${base}outline/eyeglass.svg` : `${base}outline/eyeglass-off.svg`; } }
+        function refreshIcons(){
+          const darkOn = (new URLSearchParams(window.location.search).get('dark')||'0') === '1' || document.body.classList.contains('dark');
+          const chordsOn = (new URLSearchParams(window.location.search).get('chords')||'1') === '1';
+          const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/';
+          const img = (id, path) => { const el = document.getElementById(id); if(el){ el.src = `${base}${path}`; } };
+          img('theme-icon', darkOn ? 'outline/moon.svg' : 'outline/sun.svg');
+          img('chords-icon', chordsOn ? 'outline/music-2.svg' : 'outline/music-off.svg');
+          img('share-icon', 'outline/share-2.svg');
+          const openSearch = document.querySelector('#open-search img'); if(openSearch){ openSearch.src = `${base}outline/search.svg`; }
+          const themeToggleBtn = document.getElementById('theme-toggle');
+          if(themeToggleBtn){ const t = darkOn ? 'Dark theme' : 'Light theme'; themeToggleBtn.title = t; themeToggleBtn.setAttribute('aria-label', t); }
+          const chordsToggleBtn = document.getElementById('chords-toggle');
+          if(chordsToggleBtn){ const t = chordsOn ? 'Chords visible' : 'Chords hidden'; chordsToggleBtn.title = t; chordsToggleBtn.setAttribute('aria-label', t); }
+        }
         const searchInput = document.querySelector('.search input');
         if(searchInput){ searchInput.addEventListener('focus', () => { searchInput.style.webkitTextSizeAdjust = '100%'; }, {passive:true}); }
         refreshIcons();

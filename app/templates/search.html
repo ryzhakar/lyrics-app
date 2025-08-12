@@ -14,6 +14,9 @@
   <div class="search-header">
     <form action="/search" method="get" class="search search-large">
       <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
+      <button type="submit" class="search-btn" aria-label="Search" title="Search">
+        <img width="20" height="20" alt="" />
+      </button>
     </form>
   </div>
 
@@ -48,6 +51,9 @@
 
   <script>
     (function(){
+      const baseIcons = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/';
+      const searchBtnImg = document.querySelector('.search-btn img');
+      if(searchBtnImg){ searchBtnImg.src = `${baseIcons}outline/search.svg`; }
       const forms = Array.from(document.querySelectorAll('form.search'));
       function ensureHiddenS(value){
         if(!forms.length) return;
