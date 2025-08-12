@@ -172,7 +172,7 @@
       let autoScrollTimer = null;
       function indexOfLi(node){ return Array.from(sel.children).indexOf(node); }
       function clearAutoScroll(){ if(autoScrollTimer){ cancelAnimationFrame(autoScrollTimer); autoScrollTimer = null; } }
-      function maybeAutoScroll(y){ const edge = 56; const speed = 12; const rect = sel.getBoundingClientRect(); const nearEdge = (y < rect.top + edge) || (y > rect.bottom - edge); if(!nearEdge){ clearAutoScroll(); return; } if(autoScrollTimer) return; const step = ()=>{ const r = sel.getBoundingClientRect(); if(y < r.top + edge){ window.scrollBy(0, -speed); } else if(y > r.bottom - edge){ window.scrollBy(0, speed); } autoScrollTimer = requestAnimationFrame(step); }; autoScrollTimer = requestAnimationFrame(step); }
+      function maybeAutoScroll(y, allowUp, allowDown){ const edge = 56; const speed = 10; const rect = sel.getBoundingClientRect(); const nearUp = allowUp && (y < rect.top + edge); const nearDown = allowDown && (y > rect.bottom - edge); if(!nearUp && !nearDown){ clearAutoScroll(); return; } if(autoScrollTimer) return; const step = ()=>{ const r = sel.getBoundingClientRect(); if(allowUp && y < r.top + edge){ window.scrollBy(0, -speed); } else if(allowDown && y > r.bottom - edge){ window.scrollBy(0, speed); } else { clearAutoScroll(); return; } autoScrollTimer = requestAnimationFrame(step); }; autoScrollTimer = requestAnimationFrame(step); }
       function ensurePlaceholder(){ if(!placeholder){ placeholder = document.createElement('li'); placeholder.className = 'drop-placeholder'; } return placeholder; }
       function liveItems(){ return Array.from(sel.children).filter(el => el.matches('li.selected-item') && !el.classList.contains('drag-hide')); }
       function dropIndexForY(clientY){ const items = liveItems(); for(let i=0;i<items.length;i++){ const r = items[i].getBoundingClientRect(); const mid = r.top + r.height/2; if(clientY < mid){ return i; } } return items.length; }
@@ -192,7 +192,7 @@
         e.dataTransfer.dropEffect = 'move';
         const index = dropIndexForY(e.clientY);
         movePlaceholderToIndex(index);
-        maybeAutoScroll(e.clientY);
+        const count = liveItems().length; const allowUp = index === 0; const allowDown = index < count; maybeAutoScroll(e.clientY, allowUp, allowDown);
       });
       sel.addEventListener('drop', (e)=>{
         e.preventDefault();
@@ -308,7 +308,7 @@
         const y = e.touches[0].clientY;
         const index = dropIndexForY(y);
         movePlaceholderToIndex(index);
-        maybeAutoScroll(y);
+        const count = liveItems().length; const allowUp = index === 0; const allowDown = index < count; maybeAutoScroll(y, allowUp, allowDown);
       }, {passive:false});
       sel.addEventListener('touchend', ()=>{
         if(dragIndex === -1) return;
