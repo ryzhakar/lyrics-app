@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto+Slab:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/base.css" />
   </head>
-  <body class="{{ 'dark' if dark else '' }} font-{{ font or 'normal' }}">
+  <body class="{{ 'dark' if dark else '' }} font-{{ font or 'normal' }} {{ 'is-search' if is_search else 'is-song' }}">
     <nav class="topbar">
       <div class="topbar-row">
         <a href="/" class="brand" aria-label="Home">Lyrics</a>
@@ -20,7 +20,9 @@
         {% endif %}
         <div class="actions">
           <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/moon.svg" width="22" height="22" alt=""></button>
+          {% if not is_search %}
           <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords"><img id="chords-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/music.svg" width="22" height="22" alt=""></button>
+          {% endif %}
           <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link"><img id="share-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/share-2.svg" width="22" height="22" alt=""></button>
         </div>
       </div>
@@ -33,17 +35,24 @@
     <script>
       (function(){
         const qs = new URLSearchParams(window.location.search);
+        const darkParam = qs.get('dark');
+        if(darkParam === '1' || darkParam === '0'){ try{ localStorage.setItem('prefDark', darkParam); }catch{} }
+        try{
+          const savedDark = localStorage.getItem('prefDark');
+          if(savedDark === '1'){ document.body.classList.add('dark'); }
+          if(savedDark === '0'){ document.body.classList.remove('dark'); }
+        }catch{}
         const s = qs.get('s') || '';
         if (window.location.pathname === '/' && !s) {
           try { window.__showSearchHero = true; history.replaceState(null, '', '/search' + (window.location.search || '')); } catch {}
         }
         function setParam(name, value){ const q = new URLSearchParams(window.location.search); if(value === null){ q.delete(name); } else { q.set(name, value); } window.location.search = q.toString(); }
-        function refreshIcons(){ const darkOn = (new URLSearchParams(window.location.search).get('dark')||'0') === '1' || document.body.classList.contains('dark'); const chordsOn = (new URLSearchParams(window.location.search).get('chords')||'1') === '1'; const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/'; document.getElementById('theme-icon').src = darkOn ? `${base}outline/sun.svg` : `${base}outline/moon.svg`; document.getElementById('chords-icon').src = chordsOn ? `${base}outline/eyeglass.svg` : `${base}outline/eyeglass-off.svg`; }
+        function refreshIcons(){ const darkOn = (new URLSearchParams(window.location.search).get('dark')||'0') === '1' || document.body.classList.contains('dark'); const chordsOn = (new URLSearchParams(window.location.search).get('chords')||'1') === '1'; const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/'; const themeIcon = document.getElementById('theme-icon'); if(themeIcon){ themeIcon.src = darkOn ? `${base}outline/sun.svg` : `${base}outline/moon.svg`; } const chordsIcon = document.getElementById('chords-icon'); if(chordsIcon){ chordsIcon.src = chordsOn ? `${base}outline/eyeglass.svg` : `${base}outline/eyeglass-off.svg`; } }
         const searchInput = document.querySelector('.search input');
         if(searchInput){ searchInput.addEventListener('focus', () => { searchInput.style.webkitTextSizeAdjust = '100%'; }, {passive:true}); }
         refreshIcons();
-        document.getElementById('theme-toggle').addEventListener('click', function(){ const cur = (qs.get('dark')||'0') === '1'; setParam('dark', cur ? '0' : '1'); });
-        document.getElementById('chords-toggle').addEventListener('click', function(){ const cur = (qs.get('chords')||'1') === '1'; setParam('chords', cur ? '0' : '1'); });
+        const themeToggle = document.getElementById('theme-toggle'); if(themeToggle){ themeToggle.addEventListener('click', function(){ const nowDark = document.body.classList.toggle('dark'); try{ localStorage.setItem('prefDark', nowDark ? '1' : '0'); }catch{} refreshIcons(); }); }
+        const chordsToggle = document.getElementById('chords-toggle'); if(chordsToggle){ chordsToggle.addEventListener('click', function(){ const cur = (qs.get('chords')||'1') === '1'; setParam('chords', cur ? '0' : '1'); }); }
         function showToast(text){ const el = document.getElementById('toast'); el.textContent = text; el.setAttribute('aria-hidden','false'); el.classList.add('show'); setTimeout(()=>{ el.classList.remove('show'); el.setAttribute('aria-hidden','true');}, 1600); }
         document.getElementById('share-link').addEventListener('click', async function(){ const url = window.location.href; try{ if(navigator.share){ await navigator.share({url}); showToast('Link shared'); return; } if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(url); showToast('Link copied'); return; } const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta); showToast(ok ? 'Link copied' : 'Open share sheet'); }catch{ showToast('Could not share'); }});
         const actions = document.querySelector('.actions');
