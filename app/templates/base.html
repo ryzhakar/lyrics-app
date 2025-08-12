@@ -51,7 +51,7 @@
           const base = 'https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/';
           const img = (id, path) => { const el = document.getElementById(id); if(el){ el.src = `${base}${path}`; } };
           img('theme-icon', darkOn ? 'outline/moon.svg' : 'outline/sun.svg');
-          img('chords-icon', chordsOn ? 'outline/music-2.svg' : 'outline/music-off.svg');
+          img('chords-icon', chordsOn ? 'outline/music.svg' : 'outline/music-off.svg');
           img('share-icon', 'outline/share-2.svg');
           const openSearch = document.querySelector('#open-search img'); if(openSearch){ openSearch.src = `${base}outline/search.svg`; }
           const themeToggleBtn = document.getElementById('theme-toggle');
