@@ -168,11 +168,56 @@
 
       const sel = document.getElementById('sel-list');
       let dragIndex = -1;
+      let placeholder = null;
+      let autoScrollTimer = null;
       function indexOfLi(node){ return Array.from(sel.children).indexOf(node); }
-      sel.addEventListener('dragstart', (e)=>{ const li = e.target.closest('li.selected-item'); if(!li) return; dragIndex = indexOfLi(li); e.dataTransfer.effectAllowed = 'move'; });
-      sel.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-      sel.addEventListener('drop', (e)=>{ e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return; const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; renderPreservingHeader(); });
-      sel.addEventListener('dragend', ()=>{ dragIndex = -1; });
+      function clearAutoScroll(){ if(autoScrollTimer){ cancelAnimationFrame(autoScrollTimer); autoScrollTimer = null; } }
+      function maybeAutoScroll(y){ const edge = 56; const speed = 12; function step(){ const rect = sel.getBoundingClientRect(); if(y < rect.top + edge){ window.scrollBy(0, -speed); } else if(y > rect.bottom - edge){ window.scrollBy(0, speed); } autoScrollTimer = requestAnimationFrame(step); } clearAutoScroll(); autoScrollTimer = requestAnimationFrame(step); }
+      function ensurePlaceholder(){ if(!placeholder){ placeholder = document.createElement('li'); placeholder.className = 'drop-placeholder'; } return placeholder; }
+      function insertPlaceholderAt(targetLi, above){ const ph = ensurePlaceholder(); if(!targetLi){ sel.appendChild(ph); return; } if(above){ sel.insertBefore(ph, targetLi); } else { sel.insertBefore(ph, targetLi.nextSibling); } }
+      sel.addEventListener('dragstart', (e)=>{
+        const li = e.target.closest('li.selected-item'); if(!li) return;
+        dragIndex = indexOfLi(li);
+        e.dataTransfer.effectAllowed = 'move';
+        li.classList.add('drag-hide');
+        insertPlaceholderAt(li, true);
+      });
+      sel.addEventListener('dragover', (e)=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const overLi = e.target.closest('li.selected-item');
+        const ph = ensurePlaceholder();
+        if(overLi && overLi !== ph){
+          const rect = overLi.getBoundingClientRect();
+          const above = (e.clientY - rect.top) < (rect.height / 2);
+          insertPlaceholderAt(overLi, above);
+        } else if(!overLi && sel.children.length){
+          sel.appendChild(ph);
+        }
+        maybeAutoScroll(e.clientY);
+      });
+      sel.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        clearAutoScroll();
+        const ph = ensurePlaceholder();
+        const to = indexOfLi(ph);
+        if(dragIndex !== -1 && to !== -1){
+          const moved = selection.splice(dragIndex, 1)[0];
+          const insertAt = to > dragIndex ? to - 1 : to;
+          selection.splice(insertAt, 0, moved);
+          setURLWithS(selection);
+        }
+        dragIndex = -1;
+        ph.remove();
+        placeholder = null;
+        renderPreservingHeader();
+      });
+      sel.addEventListener('dragend', ()=>{
+        clearAutoScroll();
+        const hide = sel.querySelector('li.selected-item.drag-hide');
+        if(hide) hide.classList.remove('drag-hide');
+        if(placeholder){ placeholder.remove(); placeholder = null; }
+      });
 
       // Delegate key switching and menu inside selected list
       sel.addEventListener('click', (e)=>{
