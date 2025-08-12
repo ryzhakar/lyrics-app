@@ -33,17 +33,10 @@
             <div class="song-meta">
               {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
               {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
-              {% if s.default_key %}<span class="dot"></span><span class="meta-item key">Key: {{ s.default_key }}</span>{% endif %}
             </div>
           </a>
         </div>
         <div class="result-actions">
-          {% if s.youtube_url %}
-            <a class="icon-link youtube" href="{{ s.youtube_url }}" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"></a>
-          {% endif %}
-          {% if s.songlink_url %}
-            <a class="icon-link spotify" href="{{ s.songlink_url }}" target="_blank" rel="noopener" title="Streaming" aria-label="Streaming"></a>
-          {% endif %}
           <button type="button" class="icon-btn plus-btn" title="Add to setlist" aria-label="Add to setlist">+</button>
         </div>
       </div>
@@ -101,6 +94,7 @@
         selection.forEach((it, i)=>{
           const li = document.createElement('li');
           li.className = 'selected-item';
+          li.draggable = true;
           const title = (meta[it.id] && meta[it.id].title) || it.id;
           const artist = (meta[it.id] && meta[it.id].artist) || '';
           const defKey = (meta[it.id] && meta[it.id].default_key) || '';
@@ -110,25 +104,24 @@
           titleEl.className = 'song-title';
           titleEl.textContent = title;
           stack.appendChild(titleEl);
-          const metaEl = document.createElement('div');
-          metaEl.className = 'song-meta';
           if (artist) {
+            const metaEl = document.createElement('div');
+            metaEl.className = 'song-meta';
             const a = document.createElement('span'); a.className = 'meta-item artist'; a.textContent = artist; metaEl.appendChild(a);
+            stack.appendChild(metaEl);
           }
-          if (defKey) {
-            if (artist) { const dot = document.createElement('span'); dot.className = 'dot'; metaEl.appendChild(dot); }
-            const k = document.createElement('span'); k.className = 'meta-item key'; k.textContent = `Key: ${defKey}`; metaEl.appendChild(k);
-          }
-          if (metaEl.childElementCount) { stack.appendChild(metaEl); }
           li.appendChild(stack);
+          const keyWrap = document.createElement('div'); keyWrap.className = 'song-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
+          const upBtn = document.createElement('button'); upBtn.type = 'button'; upBtn.className = 'icon-btn key-btn transpose-btn'; upBtn.setAttribute('data-dir','up'); upBtn.setAttribute('title','Transpose up'); upBtn.setAttribute('aria-label','Transpose up'); upBtn.innerHTML = '<span class="icon icon-chev-up" aria-hidden="true"></span>';
+          const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Key: ${it.key || defKey || '\u00A0'}`;
+          const downBtn = document.createElement('button'); downBtn.type = 'button'; downBtn.className = 'icon-btn key-btn transpose-btn'; downBtn.setAttribute('data-dir','down'); downBtn.setAttribute('title','Transpose down'); downBtn.setAttribute('aria-label','Transpose down'); downBtn.innerHTML = '<span class="icon icon-chev-down" aria-hidden="true"></span>';
+          keyWrap.appendChild(upBtn); keyWrap.appendChild(label); keyWrap.appendChild(downBtn);
+          li.appendChild(keyWrap);
           const controls = document.createElement('div'); controls.className = 'selected-controls';
-          const up = document.createElement('button'); up.type = 'button'; up.className = 'icon-btn'; up.textContent = '↑'; up.title = 'Move up'; up.setAttribute('aria-label','Move up'); if(i===0){ up.disabled = true; }
-          const down = document.createElement('button'); down.type = 'button'; down.className = 'icon-btn'; down.textContent = '↓'; down.title = 'Move down'; down.setAttribute('aria-label','Move down'); if(i===selection.length-1){ down.disabled = true; }
           const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn'; rm.textContent = '×'; rm.title = 'Remove'; rm.setAttribute('aria-label','Remove');
-          up.addEventListener('click', ()=> moveSelection(it.id, 'up'), {passive:true});
-          down.addEventListener('click', ()=> moveSelection(it.id, 'down'), {passive:true});
           rm.addEventListener('click', ()=> removeSelection(it.id), {passive:true});
-          controls.appendChild(up); controls.appendChild(down); controls.appendChild(rm);
+          const drag = document.createElement('span'); drag.className = 'drag-handle icon-btn'; drag.innerHTML = '≡'; drag.title = 'Drag to reorder'; drag.setAttribute('aria-label','Drag to reorder');
+          controls.appendChild(drag); controls.appendChild(rm);
           li.appendChild(controls);
           list.appendChild(li);
         });
@@ -162,6 +155,19 @@
           if(isSelected(id)){ removeSelection(id); } else { addSelection(id, defKey); }
         }, {passive:true});
       });
+
+      const sel = document.getElementById('sel-list');
+      let dragIndex = -1;
+      function indexOfLi(node){ return Array.from(sel.children).indexOf(node); }
+      sel.addEventListener('dragstart', (e)=>{
+        const li = e.target.closest('li.selected-item'); if(!li) return; dragIndex = indexOfLi(li); e.dataTransfer.effectAllowed = 'move';
+      });
+      sel.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+      sel.addEventListener('drop', (e)=>{
+        e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return;
+        const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; render();
+      });
+      sel.addEventListener('dragend', ()=>{ dragIndex = -1; });
 
       const openBtn = document.getElementById('open-setlist');
       if(openBtn){ openBtn.addEventListener('click', function(){ const s = buildS(selection); const url = s ? `/?s=${encodeURIComponent(s)}` : '/'; window.location.href = url; }, {passive:true}); }

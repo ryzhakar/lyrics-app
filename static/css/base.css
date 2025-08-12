@@ -52,7 +52,7 @@ main.container { max-width: var(--measure); margin: 0 auto; padding: calc(var(--
 .search input { width: 100%; max-width: none; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--separator); background: transparent; color: var(--fg); font-size: 16px; line-height: 1.2; }
 .search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
 .actions { display: flex; gap: var(--space-3); }
-.icon-btn { appearance: none; border: 0; background: transparent; color: var(--muted); padding: 8px; border-radius: 0; touch-action: manipulation; display: inline-flex; align-items: center; justify-content: center; }
+.icon-btn { appearance: none; border: 0; background: transparent; color: var(--muted); padding: 10px; border-radius: 0; touch-action: manipulation; display: inline-flex; align-items: center; justify-content: center; }
 .icon-btn:active { transform: translateY(1px); }
 .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 12px; border-radius: 8px; opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 200; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
@@ -204,21 +204,24 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .result-actions { display: flex; gap: var(--space-3); }
 
 /* plus button */
-.plus-btn { border: 0; border-radius: 6px; width: 24px; height: 24px; font-weight: 700; color: var(--muted); background: transparent; padding: 0; line-height: 24px; }
+.plus-btn { border: 0; border-radius: 8px; width: 28px; height: 28px; font-weight: 700; color: var(--muted); background: transparent; padding: 0; line-height: 28px; }
 .plus-btn.is-active { background: var(--accent); color: var(--bg); }
 
 /* selected panel visibility */
 .is-hidden { display: none !important; }
 
 /* setlist selection UI */
-.selected-panel { display: grid; gap: var(--space-1); margin-bottom: var(--space-3); }
+.selected-panel { display: grid; gap: var(--space-1); margin-bottom: var(--space-3); border-bottom: 1px solid var(--separator); padding-bottom: var(--space-3); }
 .selected-header { display: grid; grid-template-columns: 1fr auto; align-items: baseline; }
 .selected-title { font-weight: 600; font-size: 13px; color: var(--muted); }
 .selected-actions { display: flex; gap: var(--space-4); }
 .selected-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); counter-reset: sel; }
-.selected-item { counter-increment: sel; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-radius: 0; }
+.selected-item { counter-increment: sel; display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; border-radius: 0; }
 .selected-item::before { content: counter(sel); width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 6px; background: var(--accent); color: var(--bg); font-size: 11px; }
-.selected-controls { display: inline-flex; gap: 4px; }
+.selected-controls { display: inline-flex; gap: var(--space-2); }
+.drag-handle { width: 28px; height: 28px; cursor: grab; color: var(--muted); }
+.drag-handle:active { cursor: grabbing; }
+.selected-item .song-key { min-width: 96px; }
 
 /* do not recolor the entire row on selection; only the plus button changes */
 .result-row.selected { outline: none; }

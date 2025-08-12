@@ -13,9 +13,13 @@
     <nav class="topbar">
       <div class="topbar-row">
         <a href="/" class="brand" aria-label="Home">Lyrics</a>
+        {% if is_search %}
         <form action="/search" method="get" class="search">
           <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
         </form>
+        {% else %}
+        <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/search.svg" width="22" height="22" alt=""></a>
+        {% endif %}
         <div class="actions">
           <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/moon.svg" width="22" height="22" alt=""></button>
           <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords"><img id="chords-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/music.svg" width="22" height="22" alt=""></button>
@@ -44,6 +48,14 @@
         document.getElementById('chords-toggle').addEventListener('click', function(){ const cur = (qs.get('chords')||'1') === '1'; setParam('chords', cur ? '0' : '1'); });
         function showToast(text){ const el = document.getElementById('toast'); el.textContent = text; el.setAttribute('aria-hidden','false'); el.classList.add('show'); setTimeout(()=>{ el.classList.remove('show'); el.setAttribute('aria-hidden','true');}, 1600); }
         document.getElementById('share-link').addEventListener('click', async function(){ const url = window.location.href; try{ if(navigator.share){ await navigator.share({url}); showToast('Link shared'); return; } if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(url); showToast('Link copied'); return; } const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta); showToast(ok ? 'Link copied' : 'Open share sheet'); }catch{ showToast('Could not share'); }});
+        const actions = document.querySelector('.actions');
+        if(actions && window.location.pathname !== '/search'){
+          const editBtn = document.createElement('a');
+          editBtn.href = '#'; editBtn.className = 'icon-btn'; editBtn.id = 'edit-setlist'; editBtn.title = 'Edit setlist'; editBtn.setAttribute('aria-label','Edit setlist');
+          editBtn.innerHTML = '<img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/edit.svg" width="22" height="22" alt="">';
+          actions.appendChild(editBtn);
+          editBtn.addEventListener('click', function(ev){ ev.preventDefault(); const sParam = (new URLSearchParams(window.location.search).get('s')||''); const url = sParam ? `/search?s=${encodeURIComponent(sParam)}` : '/search'; window.location.href = url; }, {passive:false});
+        }
         window.addEventListener('orientationchange', ()=>{ refreshIcons(); }, {passive:true});
         window.addEventListener('resize', ()=>{ refreshIcons(); }, {passive:true});
         function parseSParam(raw){ if(!raw) return []; return raw.split(',').map(t=>t.trim()).filter(Boolean).map(token=>{ const [id, key] = token.split(':'); return {id, key: key || ''}; }); }

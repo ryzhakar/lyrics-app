@@ -108,6 +108,7 @@ async def render_setlist(
                 'query': '',
                 'dark': bool(dark),
                 'font': font or 'normal',
+                'is_search': True,
             },
         )
     blocks: list[str] = []
@@ -185,6 +186,7 @@ async def render_setlist(
             'dark': bool(dark),
             'font': font or 'normal',
             'chords': bool(chords),
+            'is_search': False,
         },
     )
 
@@ -208,5 +210,6 @@ async def search(
             'query': q,
             'dark': bool(dark),
             'font': font or 'normal',
+            'is_search': True,
         },
     )
