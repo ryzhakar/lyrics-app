@@ -2,10 +2,10 @@
 {% block content %}
   <div class="selected-panel is-hidden" id="selected-panel" aria-live="polite">
     <div class="selected-header">
-      <div class="selected-title">Selected (<span id="sel-count">0</span>)</div>
+      <div class="selected-title">Вибране (<span id="sel-count">0</span>)</div>
       <div class="selected-actions">
-        <button type="button" class="icon-btn" id="open-setlist" aria-label="Open setlist" title="Open setlist">Open Setlist</button>
-        <button type="button" class="icon-btn" id="clear-all" aria-label="Clear selection" title="Clear selection">Clear All</button>
+        <button type="button" class="icon-btn" id="open-setlist" aria-label="Відкрити" title="Відкрити">Відкрити</button>
+        <button type="button" class="icon-btn" id="clear-all" aria-label="Очистити" title="Очистити">Очистити</button>
       </div>
     </div>
     <ol class="selected-list" id="sel-list"></ol>
@@ -13,8 +13,8 @@
 
   <div class="search-header">
     <form action="/search" method="get" class="search search-large">
-      <input type="search" name="q" placeholder="Search songs, artists, or lyrics…" value="{{ query or '' }}" />
-      <button type="submit" class="search-btn" aria-label="Search" title="Search">
+      <input type="search" name="q" placeholder="Пошук…" value="{{ query or '' }}" />
+      <button type="submit" class="search-btn" aria-label="Пошук" title="Пошук">
         <img width="20" height="20" alt="" />
       </button>
     </form>
@@ -38,12 +38,12 @@
           {% if s.youtube_url or s.songlink_url %}
           <div class="result-links">
             {% if s.youtube_url %}<a class="icon-link youtube" href="{{ s.youtube_url }}" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"></a>{% endif %}
-            {% if s.songlink_url %}<a class="icon-link spotify" href="{{ s.songlink_url }}" target="_blank" rel="noopener" aria-label="Streaming" title="Streaming"></a>{% endif %}
+            {% if s.songlink_url %}<a class="icon-link spotify" href="{{ s.songlink_url }}" target="_blank" rel="noopener" aria-label="Стрімінг" title="Стрімінг"></a>{% endif %}
           </div>
           {% endif %}
         </div>
         <div class="result-actions">
-          <button type="button" class="icon-btn plus-btn" title="Add to setlist" aria-label="Add to setlist">+</button>
+          <button type="button" class="icon-btn plus-btn" title="Додати" aria-label="Додати">+</button>
         </div>
       </div>
     {% endfor %}
@@ -135,13 +135,13 @@
           if (artist) { const a = document.createElement('div'); a.className = 'list-artist'; a.textContent = artist; stack.appendChild(a); }
           li.appendChild(stack);
           const keyWrap = document.createElement('div'); keyWrap.className = 'sel-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
-          const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Key: ${it.key || defKey || '\u00A0'}`;
+          const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Тон: ${it.key || defKey || '\u00A0'}`;
           keyWrap.appendChild(label);
           li.appendChild(keyWrap);
           const controls = document.createElement('div'); controls.className = 'selected-controls';
-          const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn remove-btn'; rm.textContent = '×'; rm.title = 'Remove'; rm.setAttribute('aria-label','Remove');
+          const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn remove-btn'; rm.textContent = '×'; rm.title = 'Прибрати'; rm.setAttribute('aria-label','Прибрати');
           rm.addEventListener('click', ()=> removeSelection(it.id), {passive:true});
-          const drag = document.createElement('span'); drag.className = 'drag-handle icon-btn'; drag.innerHTML = '≡'; drag.title = 'Drag to reorder'; drag.setAttribute('aria-label','Drag to reorder');
+          const drag = document.createElement('span'); drag.className = 'drag-handle icon-btn'; drag.innerHTML = '≡'; drag.title = 'Пересунути'; drag.setAttribute('aria-label','Пересунути');
           controls.appendChild(drag); controls.appendChild(rm);
           li.appendChild(controls);
           list.appendChild(li);
@@ -153,10 +153,10 @@
           const link = row.querySelector('.result-link');
           if(idx !== -1){
             row.classList.add('selected');
-            if(plus){ plus.classList.add('is-active'); plus.textContent = String(idx+1); plus.setAttribute('title','Remove from setlist'); plus.setAttribute('aria-label','Remove from setlist'); }
+            if(plus){ plus.classList.add('is-active'); plus.textContent = String(idx+1); plus.setAttribute('title','Прибрати'); plus.setAttribute('aria-label','Прибрати'); }
           } else {
             row.classList.remove('selected');
-            if(plus){ plus.classList.remove('is-active'); plus.textContent = '+'; plus.setAttribute('title','Add to setlist'); plus.setAttribute('aria-label','Add to setlist'); }
+            if(plus){ plus.classList.remove('is-active'); plus.textContent = '+'; plus.setAttribute('title','Додати'); plus.setAttribute('aria-label','Додати'); }
           }
           if(link){
             if(selection.length > 0){

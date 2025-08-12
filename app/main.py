@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import uuid
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -115,11 +117,11 @@ async def render_setlist(
     for song_id, target_key in pairs:
         row = await get_song_by_id(conn, song_id)
         if not row or row.get('is_draft'):
-            raise HTTPException(status_code=404, detail='Song not found')
+            raise HTTPException(status_code=404, detail='немає такого')
         try:
             parsed = parse_chordpro(row['chordpro_content'])
         except Exception as exc:
-            raise HTTPException(status_code=400, detail='Song content cannot be parsed') from exc
+            raise HTTPException(status_code=400, detail='не вдалося розібрати') from exc
         semitones = compute_semitone_interval(row.get('default_key'), target_key)
         prefer_sharps = prefer_sharps_for_key(target_key)
         for section in parsed.sections:
@@ -163,7 +165,7 @@ async def render_setlist(
             '<span class="icon icon-chev-down" aria-hidden="true"></span>'
             '</button>'
         )
-        key_label = f'<div class="key-label">Key: {eff_key or "&nbsp;"}</div>'
+        key_label = f'<div class="key-label">Тон: {eff_key or "&nbsp;"}</div>'
         key_html = (
             f'<div class="song-key" {key_base_attrs}>{up_btn}{key_label}{down_btn}</div>'
             if bool(chords)
@@ -189,6 +191,22 @@ async def render_setlist(
             'is_search': False,
         },
     )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == HTTPStatus.NOT_FOUND:
+        return templates.TemplateResponse(
+            request,
+            '404.html',
+            {
+                'dark': bool((request.query_params.get('dark') or '0') == '1'),
+                'font': request.query_params.get('font') or 'normal',
+                'is_search': True,
+            },
+            status_code=HTTPStatus.NOT_FOUND,
+        )
+    return JSONResponse({'detail': exc.detail}, status_code=exc.status_code)
 
 
 @app.get('/search', response_class=HTMLResponse)

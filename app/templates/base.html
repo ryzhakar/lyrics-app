@@ -20,7 +20,7 @@
           {% endif %}
           <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link"><img id="share-icon" width="22" height="22" alt=""></button>
           {% if not is_search %}
-          <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img width="22" height="22" alt=""></a>
+          <a href="/search" class="icon-btn" id="open-search" aria-label="Пошук" title="Пошук"><img width="22" height="22" alt=""></a>
           {% endif %}
         </div>
       </div>
@@ -55,9 +55,9 @@
           img('share-icon', 'outline/share-2.svg');
           const openSearch = document.querySelector('#open-search img'); if(openSearch){ openSearch.src = `${base}outline/search.svg`; }
           const themeToggleBtn = document.getElementById('theme-toggle');
-          if(themeToggleBtn){ const t = darkOn ? 'Dark theme' : 'Light theme'; themeToggleBtn.title = t; themeToggleBtn.setAttribute('aria-label', t); }
+          if(themeToggleBtn){ const t = darkOn ? 'Темна тема' : 'Світла тема'; themeToggleBtn.title = t; themeToggleBtn.setAttribute('aria-label', t); }
           const chordsToggleBtn = document.getElementById('chords-toggle');
-          if(chordsToggleBtn){ const t = chordsOn ? 'Chords visible' : 'Chords hidden'; chordsToggleBtn.title = t; chordsToggleBtn.setAttribute('aria-label', t); }
+          if(chordsToggleBtn){ const t = chordsOn ? 'Активні акорди' : 'Акорди приховано'; chordsToggleBtn.title = t; chordsToggleBtn.setAttribute('aria-label', t); }
         }
         const searchInput = document.querySelector('.search input');
         if(searchInput){ searchInput.addEventListener('focus', () => { searchInput.style.webkitTextSizeAdjust = '100%'; }, {passive:true}); }
