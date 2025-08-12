@@ -202,8 +202,10 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
   gap: 4px;
 }
 .result-main .result-link[aria-disabled="true"] { pointer-events: none; }
-.result-main .song-title { font-family: var(--lyrics); font-weight: 600; font-size: 18px; }
-.result-main .song-meta { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: var(--space-2); }
+.result-main .list-title { font-family: var(--lyrics); font-weight: 600; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.result-main .list-meta { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: var(--space-2); }
+.selected-list .list-title { font-family: var(--lyrics); font-weight: 600; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.selected-list .list-artist { color: var(--muted); font-size: 12px; }
 .result-main .song-meta .dot::before { content: '·'; margin: 0 var(--space-2); }
 .result-actions { display: flex; gap: var(--space-3); }
 
@@ -226,23 +228,22 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .drag-handle:active { cursor: grabbing; }
 .selected-item.drag-hide { display: none; }
 .drop-placeholder { height: 44px; border-radius: 8px; background: color-mix(in srgb, var(--fg) 8%, transparent); }
-.selected-item .song-key {
-  min-width: 96px;
+.selected-item .sel-key {
+  min-width: 88px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   padding: 0;
   text-align: left;
   grid-column: auto;
   grid-row: auto;
   justify-self: end;
 }
-.selected-item .song-key .key-label { margin: 0; line-height: 1; }
-.selected-item .song-key .key-btn { padding: 6px; }
+.selected-item .sel-key .key-label { margin: 0; line-height: 1; white-space: nowrap; }
 .selected-item .song-stack { min-width: 0; display: inline-flex; align-items: center; gap: var(--space-2); }
 .selected-item .song-title, .selected-item .song-meta { white-space: nowrap; }
 
-.remove-btn { width: 32px; height: 32px; line-height: 32px; font-size: 20px; }
+.remove-btn { width: 32px; height: 32px; line-height: 32px; font-size: 20px; border-radius: 8px; }
+.result-actions .plus-btn, .remove-btn { display: inline-grid; place-items: center; }
 
 /* do not recolor the entire row on selection; only the plus button changes */
 .result-row.selected { outline: none; }

@@ -26,8 +26,8 @@
            data-artist="{{ s.artist or '' }}">
         <div class="result-main">
           <a class="result-link" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
-            <div class="song-title">{{ s.translated_title }}</div>
-            <div class="song-meta">
+            <div class="list-title">{{ s.translated_title }}</div>
+            <div class="list-meta">
               {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
               {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
             </div>
@@ -106,14 +106,14 @@
           const artist = (meta[it.id] && meta[it.id].artist) || '';
           const defKey = (meta[it.id] && meta[it.id].default_key) || '';
           const stack = document.createElement('div');
-          stack.className = 'song-stack';
+          stack.className = 'sel-stack';
           const titleEl = document.createElement('div');
-          titleEl.className = 'song-title';
+          titleEl.className = 'list-title';
           titleEl.textContent = title;
           stack.appendChild(titleEl);
-          if (artist) { const a = document.createElement('span'); a.className = 'song-meta'; a.textContent = artist; stack.appendChild(a); }
+          if (artist) { const a = document.createElement('div'); a.className = 'list-artist'; a.textContent = artist; stack.appendChild(a); }
           li.appendChild(stack);
-          const keyWrap = document.createElement('div'); keyWrap.className = 'song-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
+          const keyWrap = document.createElement('div'); keyWrap.className = 'sel-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
           const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Key: ${it.key || defKey || '\u00A0'}`;
           keyWrap.appendChild(label);
           li.appendChild(keyWrap);
@@ -221,12 +221,12 @@
 
       // Delegate key switching and menu inside selected list
       sel.addEventListener('click', (e)=>{
-        const label = e.target.closest('.song-key .key-label');
+        const label = e.target.closest('.sel-key .key-label');
         const opt = e.target.closest('.key-option');
         const li = e.target.closest('li.selected-item');
         if(label && li){
           e.preventDefault(); e.stopPropagation();
-          const wrap = label.closest('.song-key');
+          const wrap = label.closest('.sel-key');
           document.querySelectorAll('.selected-list .key-popover').forEach(el=>el.remove());
           const songId = wrap.getAttribute('data-song-id');
           const idx = selection.findIndex(it=> it.id === songId);
@@ -245,7 +245,7 @@
           return;
         }
         if(opt){
-          const wrap = opt.closest('.song-key'); if(!wrap) return;
+          const wrap = opt.closest('.sel-key'); if(!wrap) return;
           const songId = wrap.getAttribute('data-song-id');
           const idx = selection.findIndex(it=> it.id === songId); if(idx === -1) return;
           const newKey = opt.textContent.trim();
@@ -290,6 +290,46 @@
           if(selection.length > 0){ e.preventDefault(); e.stopPropagation(); }
         }, {passive:false, capture:true});
       }
+
+      sel.addEventListener('touchstart', (e)=>{
+        const handle = e.target.closest('.drag-handle');
+        const li = e.target.closest('li.selected-item');
+        if(!li || !handle) return;
+        e.preventDefault();
+        dragIndex = indexOfLi(li);
+        li.classList.add('drag-hide');
+        insertPlaceholderAt(li, true);
+      }, {passive:false});
+      sel.addEventListener('touchmove', (e)=>{
+        if(dragIndex === -1) return;
+        const y = e.touches[0].clientY;
+        const overLi = document.elementFromPoint(e.touches[0].clientX, y)?.closest('li.selected-item');
+        const ph = ensurePlaceholder();
+        if(overLi && overLi !== ph){
+          const rect = overLi.getBoundingClientRect();
+          const above = (y - rect.top) < (rect.height / 2);
+          insertPlaceholderAt(overLi, above);
+        } else if(!overLi && sel.children.length){
+          sel.appendChild(ph);
+        }
+      }, {passive:false});
+      sel.addEventListener('touchend', ()=>{
+        if(dragIndex === -1) return;
+        const ph = ensurePlaceholder();
+        const to = indexOfLi(ph);
+        if(dragIndex !== -1 && to !== -1){
+          const moved = selection.splice(dragIndex, 1)[0];
+          const insertAt = to > dragIndex ? to - 1 : to;
+          selection.splice(insertAt, 0, moved);
+          setURLWithS(selection);
+        }
+        dragIndex = -1;
+        const hide = sel.querySelector('li.selected-item.drag-hide');
+        if(hide) hide.classList.remove('drag-hide');
+        ph.remove();
+        placeholder = null;
+        renderPreservingHeader();
+      }, {passive:false});
     })();
   </script>
 {% endblock %}
