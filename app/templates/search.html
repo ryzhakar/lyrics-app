@@ -62,6 +62,12 @@
       function getQS(){ return new URLSearchParams(window.location.search); }
       function setURLWithS(items){ const qs = getQS(); const s = buildS(items); if(s){ qs.set('s', s); } else { qs.delete('s'); } const url = `${window.location.pathname}?${qs.toString()}`; history.replaceState(null, '', url); ensureHiddenS(s); }
 
+      // local key helpers (mirror of base template)
+      function parseKeyToken(key){ if(!key) return {root:'', minor:false}; const m = key.match(/^([A-G](?:#|b)?)(m)?$/); if(!m) return {root:'', minor:false}; return {root: m[1], minor: !!m[2]}; }
+      const CHROMATIC_MAJOR_KEYS = ['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+      const CHROMATIC_MINOR_KEYS = ['Am','Bbm','Bm','Cm','C#m','Dm','D#m','Em','Fm','F#m','Gm','G#m'];
+      function stepKey(key, dir){ const t = parseKeyToken(key); if(!t.root) return key; const list = t.minor ? CHROMATIC_MINOR_KEYS : CHROMATIC_MAJOR_KEYS; const i = list.indexOf(key); if(i < 0) return key; const next = (i + (dir === 'up' ? 1 : -1) + 12) % 12; return list[next]; }
+
       const metaKey = 'setlistMeta';
       function readMeta(){ try{ return JSON.parse(sessionStorage.getItem(metaKey) || '{}'); }catch{ return {}; } }
       function writeMeta(meta){ try{ sessionStorage.setItem(metaKey, JSON.stringify(meta)); }catch{} }
@@ -76,8 +82,9 @@
       }
 
       function isSelected(id){ return selection.findIndex(it=>it.id===id) !== -1; }
-      function addSelection(id, key){ if(isSelected(id)) return; selection.push({id, key}); setURLWithS(selection); render(); }
-      function removeSelection(id){ selection = selection.filter(it=>it.id!==id); setURLWithS(selection); render(); }
+      function renderPreservingHeader(){ const hdr = document.querySelector('.search-header'); const before = hdr ? hdr.getBoundingClientRect().top : null; render(); if(before !== null && hdr){ const after = hdr.getBoundingClientRect().top; const dy = after - before; if(Math.abs(dy) > 0){ window.scrollBy({top: dy, left: 0, behavior: 'auto'}); } } }
+      function addSelection(id, key){ if(isSelected(id)) return; selection.push({id, key}); setURLWithS(selection); renderPreservingHeader(); }
+      function removeSelection(id){ selection = selection.filter(it=>it.id!==id); setURLWithS(selection); renderPreservingHeader(); }
       function moveSelection(id, dir){ const idx = selection.findIndex(it=>it.id===id); if(idx === -1) return; const to = dir==='up' ? idx-1 : idx+1; if(to < 0 || to >= selection.length) return; const tmp = selection[idx]; selection[idx] = selection[to]; selection[to] = tmp; setURLWithS(selection); render(); }
 
       function render(){
@@ -153,8 +160,26 @@
       function indexOfLi(node){ return Array.from(sel.children).indexOf(node); }
       sel.addEventListener('dragstart', (e)=>{ const li = e.target.closest('li.selected-item'); if(!li) return; dragIndex = indexOfLi(li); e.dataTransfer.effectAllowed = 'move'; });
       sel.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-      sel.addEventListener('drop', (e)=>{ e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return; const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; render(); });
+      sel.addEventListener('drop', (e)=>{ e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return; const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; renderPreservingHeader(); });
       sel.addEventListener('dragend', ()=>{ dragIndex = -1; });
+
+      // Delegate key switching inside selected list
+      sel.addEventListener('click', (e)=>{
+        const up = e.target.closest('.transpose-btn[data-dir="up"]');
+        const down = e.target.closest('.transpose-btn[data-dir="down"]');
+        if(!up && !down) return;
+        const li = e.target.closest('li.selected-item'); if(!li) return;
+        const songKeyWrap = li.querySelector('.song-key'); if(!songKeyWrap) return;
+        const songId = songKeyWrap.getAttribute('data-song-id');
+        const idx = selection.findIndex(it=> it.id === songId);
+        if(idx === -1) return;
+        const current = selection[idx].key || songKeyWrap.getAttribute('data-default-key') || '';
+        const dir = up ? 'up' : 'down';
+        const next = stepKey(current, dir);
+        selection[idx] = {id: selection[idx].id, key: next};
+        setURLWithS(selection);
+        renderPreservingHeader();
+      });
 
       const openBtn = document.getElementById('open-setlist');
       if(openBtn){ openBtn.addEventListener('click', function(){ const s = buildS(selection); const url = s ? `/?s=${encodeURIComponent(s)}` : '/'; window.location.href = url; }, {passive:true}); }
