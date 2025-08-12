@@ -97,10 +97,6 @@
           const defKey = (meta[it.id] && meta[it.id].default_key) || '';
           const stack = document.createElement('div');
           stack.className = 'song-stack';
-          stack.style.display = 'grid';
-          stack.style.gridAutoFlow = 'column';
-          stack.style.alignItems = 'center';
-          stack.style.gap = '8px';
           const titleEl = document.createElement('div');
           titleEl.className = 'song-title';
           titleEl.textContent = title;
@@ -114,7 +110,7 @@
           keyWrap.appendChild(upBtn); keyWrap.appendChild(label); keyWrap.appendChild(downBtn);
           li.appendChild(keyWrap);
           const controls = document.createElement('div'); controls.className = 'selected-controls';
-          const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn'; rm.textContent = '×'; rm.title = 'Remove'; rm.setAttribute('aria-label','Remove');
+          const rm = document.createElement('button'); rm.type = 'button'; rm.className = 'icon-btn remove-btn'; rm.textContent = '×'; rm.title = 'Remove'; rm.setAttribute('aria-label','Remove');
           rm.addEventListener('click', ()=> removeSelection(it.id), {passive:true});
           const drag = document.createElement('span'); drag.className = 'drag-handle icon-btn'; drag.innerHTML = '≡'; drag.title = 'Drag to reorder'; drag.setAttribute('aria-label','Drag to reorder');
           controls.appendChild(drag); controls.appendChild(rm);
