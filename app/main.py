@@ -165,7 +165,7 @@ async def render_setlist(
             '<span class="icon icon-chev-down" aria-hidden="true"></span>'
             '</button>'
         )
-        key_label = f'<div class="key-label">Тон: {eff_key or "&nbsp;"}</div>'
+        key_label = f'<div class="key-label">Тональність: {eff_key or "&nbsp;"}</div>'
         key_html = (
             f'<div class="song-key" {key_base_attrs}>{up_btn}{key_label}{down_btn}</div>'
             if bool(chords)

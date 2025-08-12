@@ -4,7 +4,7 @@
     <div class="selected-header">
       <div class="selected-title">Вибране (<span id="sel-count">0</span>)</div>
       <div class="selected-actions">
-        <button type="button" class="icon-btn" id="open-setlist" aria-label="Відкрити" title="Відкрити">Відкрити</button>
+        <button type="button" class="icon-btn" id="open-setlist" aria-label="Відкрити всі" title="Відкрити всі">Відкрити всі</button>
         <button type="button" class="icon-btn" id="clear-all" aria-label="Очистити" title="Очистити">Очистити</button>
       </div>
     </div>
@@ -135,7 +135,7 @@
           if (artist) { const a = document.createElement('div'); a.className = 'list-artist'; a.textContent = artist; stack.appendChild(a); }
           li.appendChild(stack);
           const keyWrap = document.createElement('div'); keyWrap.className = 'sel-key'; keyWrap.setAttribute('data-song-id', it.id); keyWrap.setAttribute('data-default-key', defKey); keyWrap.setAttribute('data-effective-key', it.key || defKey);
-          const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Тон: ${it.key || defKey || '\u00A0'}`;
+          const label = document.createElement('div'); label.className = 'key-label'; label.textContent = `Тональність: ${it.key || defKey || '\u00A0'}`;
           keyWrap.appendChild(label);
           li.appendChild(keyWrap);
           const controls = document.createElement('div'); controls.className = 'selected-controls';
