@@ -66,6 +66,9 @@
       function parseKeyToken(key){ if(!key) return {root:'', minor:false}; const m = key.match(/^([A-G](?:#|b)?)(m)?$/); if(!m) return {root:'', minor:false}; return {root: m[1], minor: !!m[2]}; }
       const CHROMATIC_MAJOR_KEYS = ['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
       const CHROMATIC_MINOR_KEYS = ['Am','Bbm','Bm','Cm','C#m','Dm','D#m','Em','Fm','F#m','Gm','G#m'];
+      const CIRCLE_MAJOR_KEYS = ['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'];
+      const CIRCLE_MINOR_KEYS = ['Am','Em','Bm','F#m','C#m','G#m','D#m','Bbm','Fm','Cm','Gm','Dm'];
+      function keysForContext(effectiveKey){ const t = parseKeyToken(effectiveKey); return t.minor ? CIRCLE_MINOR_KEYS : CIRCLE_MAJOR_KEYS; }
       function stepKey(key, dir){ const t = parseKeyToken(key); if(!t.root) return key; const list = t.minor ? CHROMATIC_MINOR_KEYS : CHROMATIC_MAJOR_KEYS; const i = list.indexOf(key); if(i < 0) return key; const next = (i + (dir === 'up' ? 1 : -1) + 12) % 12; return list[next]; }
 
       const metaKey = 'setlistMeta';
@@ -163,23 +166,62 @@
       sel.addEventListener('drop', (e)=>{ e.preventDefault(); const li = e.target.closest('li.selected-item'); if(!li) return; const to = indexOfLi(li); if(dragIndex === -1 || to === -1 || to === dragIndex) return; const moved = selection.splice(dragIndex, 1)[0]; selection.splice(to, 0, moved); setURLWithS(selection); dragIndex = -1; renderPreservingHeader(); });
       sel.addEventListener('dragend', ()=>{ dragIndex = -1; });
 
-      // Delegate key switching inside selected list
+      // Delegate key switching and menu inside selected list
       sel.addEventListener('click', (e)=>{
         const up = e.target.closest('.transpose-btn[data-dir="up"]');
         const down = e.target.closest('.transpose-btn[data-dir="down"]');
-        if(!up && !down) return;
-        const li = e.target.closest('li.selected-item'); if(!li) return;
-        const songKeyWrap = li.querySelector('.song-key'); if(!songKeyWrap) return;
-        const songId = songKeyWrap.getAttribute('data-song-id');
-        const idx = selection.findIndex(it=> it.id === songId);
-        if(idx === -1) return;
-        const current = selection[idx].key || songKeyWrap.getAttribute('data-default-key') || '';
-        const dir = up ? 'up' : 'down';
-        const next = stepKey(current, dir);
-        selection[idx] = {id: selection[idx].id, key: next};
-        setURLWithS(selection);
-        renderPreservingHeader();
+        const label = e.target.closest('.song-key .key-label');
+        const opt = e.target.closest('.key-option');
+        const li = e.target.closest('li.selected-item');
+        if((up || down) && li){
+          const songKeyWrap = li.querySelector('.song-key'); if(!songKeyWrap) return;
+          const songId = songKeyWrap.getAttribute('data-song-id');
+          const idx = selection.findIndex(it=> it.id === songId); if(idx === -1) return;
+          const current = selection[idx].key || songKeyWrap.getAttribute('data-default-key') || '';
+          const dir = up ? 'up' : 'down';
+          const next = stepKey(current, dir);
+          selection[idx] = {id: selection[idx].id, key: next};
+          setURLWithS(selection);
+          renderPreservingHeader();
+          return;
+        }
+        if(label && li){
+          e.preventDefault(); e.stopPropagation();
+          const wrap = label.closest('.song-key');
+          document.querySelectorAll('.selected-list .key-popover').forEach(el=>el.remove());
+          const songId = wrap.getAttribute('data-song-id');
+          const idx = selection.findIndex(it=> it.id === songId);
+          const effectiveKey = (idx !== -1 ? (selection[idx].key || '') : '') || wrap.getAttribute('data-default-key') || '';
+          const list = keysForContext(effectiveKey);
+          const pop = document.createElement('div');
+          pop.className = 'key-popover';
+          list.forEach(k => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'key-option' + (k === effectiveKey ? ' active' : '');
+            btn.textContent = k;
+            pop.appendChild(btn);
+          });
+          wrap.appendChild(pop);
+          return;
+        }
+        if(opt){
+          const wrap = opt.closest('.song-key'); if(!wrap) return;
+          const songId = wrap.getAttribute('data-song-id');
+          const idx = selection.findIndex(it=> it.id === songId); if(idx === -1) return;
+          const newKey = opt.textContent.trim();
+          selection[idx] = {id: selection[idx].id, key: newKey};
+          setURLWithS(selection);
+          renderPreservingHeader();
+          return;
+        }
       });
+
+      document.addEventListener('click', (e)=>{
+        if(!e.target.closest('.selected-list .song-key')){
+          document.querySelectorAll('.selected-list .key-popover').forEach(el=>el.remove());
+        }
+      }, {capture:true, passive:true});
 
       const openBtn = document.getElementById('open-setlist');
       if(openBtn){ openBtn.addEventListener('click', function(){ const s = buildS(selection); const url = s ? `/?s=${encodeURIComponent(s)}` : '/'; window.location.href = url; }, {passive:true}); }
