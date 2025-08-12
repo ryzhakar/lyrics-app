@@ -45,8 +45,9 @@ body.dark {
 }
 
 main.container { max-width: var(--measure); margin: 0 auto; padding: calc(var(--topbar-h) + var(--space-4)) var(--space-5) var(--space-8); }
+.is-song main.container { padding-top: var(--topbar-h); }
 .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: var(--bg); }
-.topbar-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-3); max-width: var(--measure); margin: 0 auto; padding: calc(8px + env(safe-area-inset-top)) var(--space-4) 8px; box-sizing: border-box; height: var(--topbar-h); }
+.topbar-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-3); max-width: var(--measure); margin: 0 auto; padding: calc(8px + env(safe-area-inset-top)) var(--space-5) 8px; box-sizing: border-box; height: var(--topbar-h); }
 .bar-spacer { height: 42px; }
 .brand { display: none; }
 .search { min-width: 0; }
