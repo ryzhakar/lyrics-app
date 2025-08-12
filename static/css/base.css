@@ -201,6 +201,7 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
   display: grid;
   gap: 4px;
 }
+.result-main .result-link[aria-disabled="true"] { pointer-events: none; }
 .result-main .song-title { font-family: var(--lyrics); font-weight: 600; font-size: 18px; }
 .result-main .song-meta { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: var(--space-2); }
 .result-main .song-meta .dot::before { content: '·'; margin: 0 var(--space-2); }

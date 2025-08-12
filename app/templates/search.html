@@ -129,12 +129,22 @@
           const id = row.getAttribute('data-id');
           const idx = selection.findIndex(it=>it.id===id);
           const plus = row.querySelector('.plus-btn');
+          const link = row.querySelector('.result-link');
           if(idx !== -1){
             row.classList.add('selected');
             if(plus){ plus.classList.add('is-active'); plus.textContent = String(idx+1); plus.setAttribute('title','Remove from setlist'); plus.setAttribute('aria-label','Remove from setlist'); }
           } else {
             row.classList.remove('selected');
             if(plus){ plus.classList.remove('is-active'); plus.textContent = '+'; plus.setAttribute('title','Add to setlist'); plus.setAttribute('aria-label','Add to setlist'); }
+          }
+          if(link){
+            if(selection.length > 0){
+              link.setAttribute('aria-disabled','true');
+              link.setAttribute('tabindex','-1');
+            } else {
+              link.removeAttribute('aria-disabled');
+              link.removeAttribute('tabindex');
+            }
           }
         });
       }
@@ -226,6 +236,15 @@
 
       toggleHero();
       render();
+
+      const resultsWrap = document.querySelector('.results');
+      if(resultsWrap){
+        resultsWrap.addEventListener('click', function(e){
+          const link = e.target.closest('.result-link');
+          if(!link) return;
+          if(selection.length > 0){ e.preventDefault(); e.stopPropagation(); }
+        }, {passive:false, capture:true});
+      }
     })();
   </script>
 {% endblock %}
