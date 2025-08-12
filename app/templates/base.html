@@ -12,18 +12,16 @@
   <body class="{{ 'dark' if dark else '' }} font-{{ font or 'normal' }} {{ 'is-search' if is_search else 'is-song' }}">
     <nav class="topbar">
       <div class="topbar-row">
-        <a href="/" class="brand" aria-label="Home">Lyrics</a>
-        {% if is_search %}
-        <div class="bar-spacer"></div>
-        {% else %}
-        <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/search.svg" width="22" height="22" alt=""></a>
-        {% endif %}
+        <a href="/" class="brand" aria-label="Home">YGS LYRICS</a>
         <div class="actions">
           <button type="button" class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><img id="theme-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/moon.svg" width="22" height="22" alt=""></button>
           {% if not is_search %}
           <button type="button" class="icon-btn" id="chords-toggle" aria-label="Toggle chords" title="Toggle chords"><img id="chords-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/music.svg" width="22" height="22" alt=""></button>
           {% endif %}
           <button type="button" class="icon-btn" id="share-link" aria-label="Share" title="Share link"><img id="share-icon" src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/share-2.svg" width="22" height="22" alt=""></button>
+          {% if not is_search %}
+          <a href="/search" class="icon-btn" id="open-search" aria-label="Open search" title="Open search"><img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/search.svg" width="22" height="22" alt=""></a>
+          {% endif %}
         </div>
       </div>
     </nav>
