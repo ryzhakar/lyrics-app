@@ -215,7 +215,7 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .is-hidden { display: none !important; }
 
 /* setlist selection UI */
-.selected-panel { display: grid; gap: var(--space-1); margin-bottom: var(--space-2); border-bottom: 1px solid var(--separator); padding-bottom: var(--space-2); }
+.selected-panel { display: grid; gap: var(--space-1); margin-bottom: var(--space-2); padding-bottom: var(--space-2); }
 .selected-header { display: grid; grid-template-columns: 1fr auto; align-items: baseline; }
 .selected-title { font-weight: 600; font-size: 13px; color: var(--muted); }
 .selected-actions { display: flex; gap: var(--space-4); }
@@ -252,7 +252,6 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .hero-hint { color: var(--muted); font-size: 13px; }
 
 .search-header { position: sticky; top: var(--topbar-h); background: var(--bg); z-index: 15; padding: var(--space-3) 0 var(--space-2); }
-.search-header::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--separator); }
 .results { margin-top: var(--space-3); }
 .selected-list .song-title { font-size: 16px; }
 .selected-item .song-meta { font-size: 12px; }
