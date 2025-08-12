@@ -72,7 +72,10 @@
           editBtn.href = '#'; editBtn.className = 'icon-btn'; editBtn.id = 'edit-setlist'; editBtn.title = 'Edit setlist'; editBtn.setAttribute('aria-label','Edit setlist');
           editBtn.innerHTML = '<img src="https://cdn.jsdelivr.net/npm/@tabler/icons@3.11.0/icons/outline/edit.svg" width="22" height="22" alt="">';
           actions.appendChild(editBtn);
-          editBtn.addEventListener('click', function(ev){ ev.preventDefault(); const sParam = (new URLSearchParams(window.location.search).get('s')||''); const url = sParam ? `/search?s=${encodeURIComponent(sParam)}` : '/search'; window.location.href = url; }, {passive:false});
+          function readMeta(){ try{ return JSON.parse(sessionStorage.getItem('setlistMeta') || '{}'); }catch{ return {}; } }
+          function writeMeta(meta){ try{ sessionStorage.setItem('setlistMeta', JSON.stringify(meta)); }catch{} }
+          function cacheSetlistMetaFromPage(){ const meta = readMeta(); document.querySelectorAll('.song-header').forEach(header=>{ const wrap = header.querySelector('.song-key'); if(!wrap) return; const id = wrap.getAttribute('data-song-id'); if(!id) return; const titleEl = header.querySelector('.song-title'); const artistEl = header.querySelector('.song-sub.artist'); const defKey = wrap.getAttribute('data-default-key') || ''; const title = titleEl ? titleEl.textContent.trim() : id; const artist = artistEl ? artistEl.textContent.trim() : ''; meta[id] = { title, artist, default_key: defKey }; }); writeMeta(meta); }
+          editBtn.addEventListener('click', function(ev){ ev.preventDefault(); cacheSetlistMetaFromPage(); const sParam = (new URLSearchParams(window.location.search).get('s')||''); const url = sParam ? `/search?s=${encodeURIComponent(sParam)}` : '/search'; window.location.href = url; }, {passive:false});
         }
         window.addEventListener('orientationchange', ()=>{ refreshIcons(); }, {passive:true});
         window.addEventListener('resize', ()=>{ refreshIcons(); }, {passive:true});
