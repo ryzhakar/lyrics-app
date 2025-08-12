@@ -204,6 +204,7 @@ pre.chords + pre.lyrics { margin-top: var(--space-1); }
 .result-main .result-link[aria-disabled="true"] { pointer-events: none; }
 .result-main .list-title { font-family: var(--lyrics); font-weight: 600; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .result-main .list-meta { color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: var(--space-2); }
+.result-main .result-links { display: flex; gap: var(--space-2); margin-top: 2px; }
 .selected-list .list-title { font-family: var(--lyrics); font-weight: 600; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .selected-list .list-artist { color: var(--muted); font-size: 12px; }
 .result-main .song-meta .dot::before { content: '·'; margin: 0 var(--space-2); }

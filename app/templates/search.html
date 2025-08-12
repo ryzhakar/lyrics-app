@@ -32,6 +32,12 @@
               {% if s.original_title %}<span class="dot"></span><span class="meta-item original">{{ s.original_title }}</span>{% endif %}
             </div>
           </a>
+          {% if s.youtube_url or s.songlink_url %}
+          <div class="result-links">
+            {% if s.youtube_url %}<a class="icon-link youtube" href="{{ s.youtube_url }}" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube"></a>{% endif %}
+            {% if s.songlink_url %}<a class="icon-link spotify" href="{{ s.songlink_url }}" target="_blank" rel="noopener" aria-label="Streaming" title="Streaming"></a>{% endif %}
+          </div>
+          {% endif %}
         </div>
         <div class="result-actions">
           <button type="button" class="icon-btn plus-btn" title="Add to setlist" aria-label="Add to setlist">+</button>
