@@ -55,6 +55,7 @@ async def search_songs(
     base_conditions = [
         or_(
             songs.c.translated_title.ilike(like_any),
+            songs.c.original_title.ilike(like_any),
             songs.c.artist.ilike(like_any),
             songs.c.chordpro_content.ilike(like_any),
         ),
@@ -74,8 +75,9 @@ async def search_songs(
         priority = case(
             (songs.c.translated_title.ilike(like_prefix), literal(1)),
             (songs.c.translated_title.ilike(like_any), literal(2)),
-            (songs.c.artist.ilike(like_any), literal(3)),
-            else_=literal(4),
+            (songs.c.original_title.ilike(like_any), literal(3)),
+            (songs.c.artist.ilike(like_any), literal(4)),
+            else_=literal(5),
         ).label('priority')
         stmt = (
             select(songs, priority)
@@ -84,10 +86,12 @@ async def search_songs(
             .limit(limit)
         )
         res2: Result = await conn.execute(stmt)
-        return [{k: v for k, v in dict(m).items() if k in songs.c} for m in res2.mappings().all()]
+        maps2 = res2.mappings().all()
+        return [{col.name: m.get(col.name, None) for col in songs.c} for m in maps2]
 
     # pg_trgm-enhanced ranking
     title_sim = func.similarity(songs.c.translated_title, term)
+    orig_sim = func.similarity(songs.c.original_title, term)
     artist_sim = func.similarity(songs.c.artist, term)
     lyrics_sim = func.similarity(songs.c.chordpro_content, term)
     title_prefix_bonus = case(
@@ -96,25 +100,24 @@ async def search_songs(
     )
     score = (
         (title_sim * literal(0.5))
+        + (orig_sim * literal(0.2))
         + (artist_sim * literal(0.3))
         + (lyrics_sim * literal(0.2))
         + title_prefix_bonus
     ).label('score')
     # keep implicit thresholding; datasets are small and curated
 
+    prefix_first = case(
+        (songs.c.translated_title.ilike(like_prefix), literal(0)),
+        else_=literal(1),
+    ).label('prefix_first')
+
     stmt = (
         select(songs, score)
         .where(and_(*base_conditions))
-        .order_by(score.desc(), songs.c.created_at.desc())
+        .order_by(prefix_first.asc(), score.desc(), songs.c.created_at.desc())
         .limit(limit)
     )
     res3: Result = await conn.execute(stmt)
-    rows = [dict(m) for m in res3.mappings().all()]
-    # Filter out extremely low scores when present; keep rows lacking score key (fallback safety)
-    pruned = [
-        {k: v for k, v in row.items() if k in songs.c}
-        for row in rows
-        if 'score' not in row
-        or (isinstance(row['score'], int | float) and float(row['score']) >= 0.0)
-    ]
-    return pruned
+    maps3 = res3.mappings().all()
+    return [{col.name: m.get(col.name, None) for col in songs.c} for m in maps3]
