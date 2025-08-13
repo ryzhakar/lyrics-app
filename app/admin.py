@@ -9,7 +9,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from fastapi import Request
 from sqladmin import Admin, ModelView
 from sqladmin.application import action
+from sqladmin.authentication import login_required
 from sqlalchemy import create_engine
+from starlette.responses import RedirectResponse
 from wtforms import PasswordField, TextAreaField
 
 from .auth import AdminAuth
@@ -26,6 +28,7 @@ class SongAdmin(ModelView, model=SongModel):
     icon = 'fa-solid fa-music'
     column_list: ClassVar[list[str]] = ['translated_title', 'is_draft']
     column_display_pk: ClassVar[bool] = False
+    column_searchable_list: ClassVar[list[str]] = ['translated_title', 'artist']
     form_columns: ClassVar[list[str]] = [
         'translated_title',
         'original_title',
@@ -93,6 +96,7 @@ class AdminUserAdmin(ModelView, model=AdminUserModel):
     page_size: ClassVar[int] = 20
     column_list: ClassVar[list[str]] = ['email']
     column_display_pk: ClassVar[bool] = False
+    column_searchable_list: ClassVar[list[str]] = ['email']
     form_excluded_columns: ClassVar[list[str]] = ['password_hash', 'created_at', 'updated_at']
     form_extra_fields: ClassVar[dict[str, Any]] = {
         'password': PasswordField('New password', render_kw={'autocomplete': 'new-password'}),
@@ -182,10 +186,16 @@ def _sync_db_url(url: str) -> str:
     return url
 
 
+class _Admin(Admin):
+    @login_required
+    async def index(self, request):  # type: ignore[override]
+        return RedirectResponse(request.url_for('admin:list', identity=SongAdmin.identity))
+
+
 def setup_admin(app: Any) -> Admin:
     """Set up SQLAdmin with views."""
     sync_engine = create_engine(_sync_db_url(settings.database_url), pool_pre_ping=True)
-    admin = Admin(
+    admin = _Admin(
         app=app,
         engine=sync_engine,
         authentication_backend=AdminAuth(settings.secret_key),
