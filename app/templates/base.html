@@ -97,8 +97,8 @@
         }
         window.addEventListener('orientationchange', ()=>{ refreshIcons(); }, {passive:true});
         window.addEventListener('resize', ()=>{ refreshIcons(); }, {passive:true});
-        function parseSParam(raw){ if(!raw) return []; return raw.split(',').map(t=>t.trim()).filter(Boolean).map(token=>{ const [id, key] = token.split(':'); return {id, key: key || ''}; }); }
-        function buildSParam(items){ return items.map(it=> it.key ? `${it.id}:${it.key}` : `${it.id}:`).join(','); }
+        function parseSParam(raw){ if(!raw) return []; return raw.split(',').map(t=>t.trim()).filter(Boolean).map(token=>{ const [id, key] = token.split(':'); return {id, key: key ? decodeURIComponent(key) : ''}; }); }
+        function buildSParam(items){ return items.map(it=> it.key ? `${it.id}:${encodeURIComponent(it.key)}` : `${it.id}:`).join(','); }
         function parseKeyToken(key){ if(!key) return {root:'', minor:false}; const m = key.match(/^([A-G](?:#|b)?)(m)?$/); if(!m) return {root:'', minor:false}; return {root: m[1], minor: !!m[2]}; }
         function stepKey(key, dir){ const token = parseKeyToken(key); if(!token.root){ return key; } const list = token.minor ? CHROMATIC_MINOR_KEYS : CHROMATIC_MAJOR_KEYS; const idx = list.indexOf(key); if(idx < 0){ return key; } const next = (idx + (dir === 'up' ? 1 : -1) + 12) % 12; return list[next]; }
         const CIRCLE_MAJOR_KEYS = ['C','G','D','A','E','B','F#','Db','Ab','Eb','Bb','F'];

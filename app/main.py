@@ -73,7 +73,13 @@ def parse_setlist_param(raw: str | None) -> list[tuple[uuid.UUID, str | None]]:
             continue
         if ':' in token:
             id_part, key_part = token.split(':', 1)
-            items.append((uuid.UUID(id_part), key_part or None))
+            # URL decode the key part to handle # characters
+            decoded_key = None
+            if key_part:
+                from urllib.parse import unquote
+
+                decoded_key = unquote(key_part)
+            items.append((uuid.UUID(id_part), decoded_key))
         else:
             items.append((uuid.UUID(token), None))
     return items
