@@ -28,7 +28,7 @@
            data-title="{{ s.translated_title }}"
            data-artist="{{ s.artist or '' }}">
         <div class="result-main">
-          <a class="result-link" href="/?s={{ s.id }}:{{ s.default_key or '' }}">
+          <a class="result-link" href="/?s={{ s.id }}:{{ (s.default_key or '')|urlencode }}">
             <div class="list-title">{{ s.translated_title }}</div>
             <div class="list-meta">
               {% if s.artist %}<span class="meta-item artist">{{ s.artist }}</span>{% endif %}
