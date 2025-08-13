@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Annotated
 
+import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,6 +38,12 @@ if TYPE_CHECKING:  # pragma: no cover
 async def lifespan(_: FastAPI):
     yield
 
+
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        enable_tracing=True,
+    )
 
 app = FastAPI(debug=settings.debug, lifespan=lifespan)
 templates = Jinja2Templates(directory='app/templates')

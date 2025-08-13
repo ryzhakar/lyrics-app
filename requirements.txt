@@ -12,10 +12,14 @@ asyncpg==0.30.0
     # via lyrics-app (pyproject.toml)
 bcrypt==4.3.0
     # via lyrics-app (pyproject.toml)
+certifi==2025.8.3
+    # via sentry-sdk
 click==8.2.1
     # via uvicorn
 fastapi==0.116.1
-    # via lyrics-app (pyproject.toml)
+    # via
+    #   lyrics-app (pyproject.toml)
+    #   sentry-sdk
 greenlet==3.2.4
     # via sqlalchemy
 h11==0.16.0
@@ -54,6 +58,8 @@ python-dotenv==1.1.1
     # via pydantic-settings
 python-multipart==0.0.20
     # via sqladmin
+sentry-sdk==2.34.1
+    # via lyrics-app (pyproject.toml)
 sniffio==1.3.1
     # via anyio
 sqladmin==0.21.0
@@ -84,6 +90,8 @@ typing-inspection==0.4.1
     #   pydantic-settings
 tzdata==2025.2
     # via alembic
+urllib3==2.5.0
+    # via sentry-sdk
 uvicorn==0.35.0
     # via lyrics-app (pyproject.toml)
 wtforms==3.1.2

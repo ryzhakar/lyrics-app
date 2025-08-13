@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     cors_allow_origins: list[str] = []
     force_https: bool = False
     gzip_min_length: int = 512
+    sentry_dsn: str | None = None
 
     admin_bootstrap_email: str | None = None
     admin_bootstrap_password: str | None = None
