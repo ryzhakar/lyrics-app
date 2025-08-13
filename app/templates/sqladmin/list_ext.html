@@ -1,0 +1,26 @@
+{% extends "sqladmin/list.html" %}
+{% block content %}
+  {{ super() }}
+  <style>
+    /* mobile-first list view */
+    .page-wrapper .container-xl {
+      width: 100%;
+      max-width: 100%;
+      padding-left: .5rem;
+      padding-right: .5rem;
+      margin-left: 0;
+      margin-right: 0;
+      box-sizing: border-box;
+    }
+    .page-body { padding-left: .5rem; padding-right: .5rem; }
+    .card { box-shadow: none; border: 1px solid var(--separator); border-radius: 12px; }
+    .table-responsive { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table { width: 100%; max-width: 100%; table-layout: fixed; }
+    .table thead th, .table tbody td { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+    .table thead th:nth-child(2), .table tbody td:nth-child(2) { width: 96px; }
+    .btn, .form-select, .form-control { font-size: 1rem; }
+    @media (min-width: 900px) {
+      .page-wrapper .container-xl { max-width: 980px; margin: 0 auto; }
+    }
+  </style>
+{% endblock %}

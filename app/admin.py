@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import bcrypt
@@ -7,8 +8,9 @@ import bcrypt
 if TYPE_CHECKING:  # pragma: no cover
     from fastapi import Request
 from sqladmin import Admin, ModelView
+from sqladmin.application import action
 from sqlalchemy import create_engine
-from wtforms import PasswordField
+from wtforms import PasswordField, TextAreaField
 
 from .auth import AdminAuth
 from .models import AdminUserModel, SongModel
@@ -22,7 +24,8 @@ class SongAdmin(ModelView, model=SongModel):
 
     category = ''
     icon = 'fa-solid fa-music'
-    column_list: ClassVar[list[str]] = ['id', 'translated_title', 'artist', 'is_draft']
+    column_list: ClassVar[list[str]] = ['translated_title', 'is_draft']
+    column_display_pk: ClassVar[bool] = False
     form_columns: ClassVar[list[str]] = [
         'translated_title',
         'original_title',
@@ -33,6 +36,29 @@ class SongAdmin(ModelView, model=SongModel):
         'songlink_url',
         'is_draft',
     ]
+    form_overrides: ClassVar[dict[str, Any]] = {'chordpro_content': TextAreaField}
+    form_widget_args: ClassVar[dict[str, dict[str, Any]]] = {
+        'chordpro_content': {
+            'rows': 30,
+            'style': (
+                'min-height: 74vh; '
+                'width: 100%; max-width: none; display: block; box-sizing: border-box; '
+                'font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, '
+                "'Liberation Mono', 'Courier New', monospace; "
+                'font-size: 14px; line-height: 1.35;'
+            ),
+            'spellcheck': 'false',
+            'autocapitalize': 'off',
+            'autocomplete': 'off',
+            'autocorrect': 'off',
+            'wrap': 'off',
+            'class': 'chordpro-textarea',
+        },
+    }
+    create_template: ClassVar[str] = 'sqladmin/create_ext.html'
+    edit_template: ClassVar[str] = 'sqladmin/edit_ext.html'
+    list_template: ClassVar[str] = 'sqladmin/list_ext.html'
+    details_template: ClassVar[str] = 'sqladmin/details_ext.html'
 
     async def on_model_change(
         self,
@@ -65,14 +91,33 @@ class AdminUserAdmin(ModelView, model=AdminUserModel):
     category = ''
     icon = 'fa-solid fa-user'
     page_size: ClassVar[int] = 20
-    column_list: ClassVar[list[str]] = ['id', 'email']
+    column_list: ClassVar[list[str]] = ['email']
+    column_display_pk: ClassVar[bool] = False
     form_excluded_columns: ClassVar[list[str]] = ['password_hash', 'created_at', 'updated_at']
     form_extra_fields: ClassVar[dict[str, Any]] = {
-        'password': PasswordField('Password', render_kw={'autocomplete': 'new-password'}),
+        'password': PasswordField('New password', render_kw={'autocomplete': 'new-password'}),
     }
     can_create: ClassVar[bool] = True
     can_edit: ClassVar[bool] = True
     can_delete: ClassVar[bool] = True
+    create_template: ClassVar[str] = 'sqladmin/create_ext.html'
+    edit_template: ClassVar[str] = 'sqladmin/edit_ext.html'
+    list_template: ClassVar[str] = 'sqladmin/list_ext.html'
+    details_template: ClassVar[str] = 'sqladmin/details_ext.html'
+
+    async def scaffold_form(self, rules: list[str] | None = None):  # type: ignore[override]
+        base = await super().scaffold_form(rules)
+        form_cls = type(
+            'AdminUserForm',
+            (base,),
+            {
+                'password': PasswordField(
+                    'New password',
+                    render_kw={'autocomplete': 'new-password'},
+                ),
+            },
+        )
+        return form_cls
 
     async def on_model_change(
         self,
@@ -92,6 +137,41 @@ class AdminUserAdmin(ModelView, model=AdminUserModel):
         if data and 'password' in data:
             data.pop('password')
 
+    @action(
+        name='reset-password',
+        label='Reset password',
+        confirmation_message='Generate a new random password and display it once?',
+        add_in_detail=True,
+        add_in_list=True,
+    )
+    async def reset_password(self, request: Any) -> Any:
+        """Reset selected admins' passwords and show new ones once."""
+        from secrets import token_urlsafe
+
+        pks_raw = request.query_params.get('pks') or ''
+        pks = [pk for pk in pks_raw.split(',') if pk]
+        if not pks:
+            return await self.templates.TemplateResponse(
+                request,
+                'sqladmin/action_result.html',
+                {'model_view': self, 'title': 'Reset password', 'items': []},
+            )
+        rows: list[dict[str, str]] = []
+        for pk in pks:
+            obj = await self.get_object_for_delete(pk)
+            if not obj:
+                continue
+            new_pw = token_urlsafe(12)
+            hashed = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+            await self.update_model(request, pk=pk, data={'password_hash': hashed})
+            email = getattr(obj, 'email', '')
+            rows.append({'email': str(email), 'password': new_pw})
+        return await self.templates.TemplateResponse(
+            request,
+            'sqladmin/action_result.html',
+            {'model_view': self, 'title': 'Reset password', 'items': rows},
+        )
+
 
 def _sync_db_url(url: str) -> str:
     """Normalize async pg URL to psycopg sync driver."""
@@ -109,6 +189,7 @@ def setup_admin(app: Any) -> Admin:
         app=app,
         engine=sync_engine,
         authentication_backend=AdminAuth(settings.secret_key),
+        templates_dir=str(Path(__file__).parent / 'templates'),
     )
     # Add song list as first view so admin loads with songs by default
     admin.add_view(SongAdmin)

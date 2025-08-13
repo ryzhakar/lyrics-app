@@ -1,0 +1,16 @@
+{% extends "sqladmin/details.html" %}
+{% block content %}
+  {{ super() }}
+  <style>
+    /* mobile-first details view */
+    html, body { overflow-x: hidden; }
+    .page-wrapper .container-xl { width: 100%; max-width: 100%; padding-left: .5rem; padding-right: .5rem; margin-left: 0; margin-right: 0; box-sizing: border-box; }
+    .card { box-shadow: none; border: 1px solid var(--separator); border-radius: 12px; }
+    .table { width: 100%; max-width: 100%; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .table th, .table td { vertical-align: top; white-space: nowrap; }
+    .btn { font-size: 1rem; }
+    @media (min-width: 900px) {
+      .page-wrapper .container-xl { max-width: 980px; margin: 0 auto; }
+    }
+  </style>
+{% endblock %}

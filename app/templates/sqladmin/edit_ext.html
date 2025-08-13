@@ -1,0 +1,27 @@
+{% extends "sqladmin/edit.html" %}
+{% block content %}
+  {{ super() }}
+  <style>
+    /* mobile-first admin layout */
+    html, body { overflow-x: hidden; }
+    .page-wrapper .container-xl { width: 100%; max-width: 100%; padding-left: .5rem; padding-right: .5rem; margin-left: 0; margin-right: 0; box-sizing: border-box; }
+    .page-body .card { box-shadow: none; border: 1px solid var(--separator); border-radius: 12px; }
+    textarea.chordpro-textarea {
+      width: 100% !important;
+      max-width: none !important;
+      display: block;
+      box-sizing: border-box;
+      min-height: 74vh !important;
+      font-family: var(--mono) !important;
+      font-size: 14px !important;
+      line-height: 1.35 !important;
+      tab-size: 4;
+      resize: vertical;
+      overflow: auto;
+    }
+    @media (min-width: 900px) {
+      .page-wrapper .container-xl { max-width: 980px; margin: 0 auto; }
+      textarea.chordpro-textarea { min-height: 78vh !important; }
+    }
+  </style>
+{% endblock %}
