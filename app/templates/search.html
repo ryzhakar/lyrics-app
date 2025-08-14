@@ -198,32 +198,76 @@
       function liveItems(){ return Array.from(sel.children).filter(el => el.matches('li.selected-item') && !el.classList.contains('drag-hide')); }
       function dropIndexForY(clientY){ const items = liveItems(); for(let i=0;i<items.length;i++){ const r = items[i].getBoundingClientRect(); const mid = r.top + r.height/2; if(clientY < mid){ return i; } } return items.length; }
       function movePlaceholderToIndex(index){ const ph = ensurePlaceholder(); const items = liveItems(); if(index <= 0){ sel.insertBefore(ph, items[0] || null); return; } const beforeNode = items[index]; if(beforeNode){ sel.insertBefore(ph, beforeNode); } else { sel.appendChild(ph); } }
-      sel.addEventListener('dragstart', (e)=>{
-        const li = e.target.closest('li.selected-item'); if(!li) return;
+
+      // Unified drag system for both desktop and mobile
+      let isDragging = false;
+      let startY = 0;
+      let startScrollY = 0;
+
+      function startDrag(li, clientY) {
+        if (isDragging) return;
+        isDragging = true;
         dragIndex = Array.from(sel.querySelectorAll('li.selected-item')).indexOf(li);
-        e.dataTransfer.effectAllowed = 'move';
-        try{ e.dataTransfer.setData('text/plain', ''); }catch{}
+        startY = clientY;
+        startScrollY = window.scrollY;
         li.classList.add('drag-hide');
         const ph = ensurePlaceholder();
-        const h = li.getBoundingClientRect().height; ph.style.height = `${Math.max(44, Math.round(h))}px`;
+        const h = li.getBoundingClientRect().height;
+        ph.style.height = `${Math.max(44, Math.round(h))}px`;
         movePlaceholderToIndex(dragIndex);
-      });
-      sel.addEventListener('dragover', (e)=>{
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd);
+      }
+
+      function handleMouseMove(e) {
+        if (!isDragging) return;
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
         const index = dropIndexForY(e.clientY);
         movePlaceholderToIndex(index);
-        const count = liveItems().length; const allowUp = index === 0; const allowDown = index < count; maybeAutoScroll(e.clientY, allowUp, allowDown);
-      });
-      sel.addEventListener('drop', (e)=>{
+        const count = liveItems().length;
+        const allowUp = index === 0;
+        const allowDown = index < count;
+        maybeAutoScroll(e.clientY, allowUp, allowDown);
+      }
+
+      function handleMouseUp(e) {
+        if (!isDragging) return;
+        finishDrag();
+      }
+
+      function handleTouchMove(e) {
+        if (!isDragging) return;
         e.preventDefault();
+        const touch = e.touches[0];
+        const index = dropIndexForY(touch.clientY);
+        movePlaceholderToIndex(index);
+        const count = liveItems().length;
+        const allowUp = index === 0;
+        const allowDown = index < count;
+        maybeAutoScroll(touch.clientY, allowUp, allowDown);
+      }
+
+      function handleTouchEnd(e) {
+        if (!isDragging) return;
+        finishDrag();
+      }
+
+      function finishDrag() {
+        if (!isDragging) return;
+        isDragging = false;
         clearAutoScroll();
         const ph = ensurePlaceholder();
-        let to = 0; {
+        let to = 0;
+        {
           const items = Array.from(sel.children);
-          for(const child of items){ if(child === ph) break; if(child.classList && child.classList.contains('selected-item')) to++; }
+          for (const child of items) {
+            if (child === ph) break;
+            if (child.classList && child.classList.contains('selected-item')) to++;
+          }
         }
-        if(dragIndex !== -1){
+        if (dragIndex !== -1) {
           const moved = selection.splice(dragIndex, 1)[0];
           const insertAt = to > dragIndex ? to - 1 : to;
           selection.splice(insertAt, 0, moved);
@@ -232,14 +276,41 @@
         dragIndex = -1;
         ph.remove();
         placeholder = null;
-        renderPreservingHeader();
+        render();
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      }
+
+      // Mouse events for desktop
+      sel.addEventListener('mousedown', (e) => {
+        const handle = e.target.closest('.drag-handle');
+        const li = e.target.closest('li.selected-item');
+        if (!li || !handle) return;
+        e.preventDefault();
+        startDrag(li, e.clientY);
       });
-      sel.addEventListener('dragend', ()=>{
-        clearAutoScroll();
-        const hide = sel.querySelector('li.selected-item.drag-hide');
-        if(hide) hide.classList.remove('drag-hide');
-        if(placeholder){ placeholder.remove(); placeholder = null; }
-      });
+
+      // Touch events for mobile (keeping existing implementation)
+      sel.addEventListener('touchstart', (e)=>{
+        const handle = e.target.closest('.drag-handle');
+        const li = e.target.closest('li.selected-item');
+        if(!li || !handle) return;
+        e.preventDefault();
+        startDrag(li, e.touches[0].clientY);
+      }, {passive:false});
+      sel.addEventListener('touchmove', (e)=>{
+        if(!isDragging) return;
+        const y = e.touches[0].clientY;
+        const index = dropIndexForY(y);
+        movePlaceholderToIndex(index);
+        const count = liveItems().length; const allowUp = index === 0; const allowDown = index < count; maybeAutoScroll(y, allowUp, allowDown);
+      }, {passive:false});
+      sel.addEventListener('touchend', ()=>{
+        if(!isDragging) return;
+        finishDrag();
+      }, {passive:false});
 
       // Delegate key switching and menu inside selected list
       sel.addEventListener('click', (e)=>{
@@ -312,44 +383,6 @@
           if(selection.length > 0){ e.preventDefault(); e.stopPropagation(); }
         }, {passive:false, capture:true});
       }
-
-      sel.addEventListener('touchstart', (e)=>{
-        const handle = e.target.closest('.drag-handle');
-        const li = e.target.closest('li.selected-item');
-        if(!li || !handle) return;
-        e.preventDefault();
-        dragIndex = Array.from(sel.querySelectorAll('li.selected-item')).indexOf(li);
-        li.classList.add('drag-hide');
-        const ph = ensurePlaceholder();
-        const h = li.getBoundingClientRect().height; ph.style.height = `${Math.max(44, Math.round(h))}px`;
-        movePlaceholderToIndex(dragIndex);
-      }, {passive:false});
-      sel.addEventListener('touchmove', (e)=>{
-        if(dragIndex === -1) return;
-        const y = e.touches[0].clientY;
-        const index = dropIndexForY(y);
-        movePlaceholderToIndex(index);
-        const count = liveItems().length; const allowUp = index === 0; const allowDown = index < count; maybeAutoScroll(y, allowUp, allowDown);
-      }, {passive:false});
-      sel.addEventListener('touchend', ()=>{
-        if(dragIndex === -1) return;
-        clearAutoScroll();
-        const ph = ensurePlaceholder();
-        let to = 0; {
-          const items = Array.from(sel.children);
-          for(const child of items){ if(child === ph) break; if(child.classList && child.classList.contains('selected-item')) to++; }
-        }
-        const moved = selection.splice(dragIndex, 1)[0];
-        const insertAt = to > dragIndex ? to - 1 : to;
-        selection.splice(insertAt, 0, moved);
-        setURLWithS(selection);
-        dragIndex = -1;
-        const hide = sel.querySelector('li.selected-item.drag-hide');
-        if(hide) hide.classList.remove('drag-hide');
-        ph.remove();
-        placeholder = null;
-        renderPreservingHeader();
-      }, {passive:false});
     })();
   </script>
 {% endblock %}
